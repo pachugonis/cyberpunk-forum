@@ -17,6 +17,16 @@ export async function GET(
           select: { id: true, name: true, image: true, role: true, bio: true },
         },
         category: true,
+        attachments: {
+          select: {
+            id: true,
+            filename: true,
+            originalName: true,
+            mimeType: true,
+            size: true,
+            url: true,
+          },
+        },
         reactions: {
           select: { type: true, userId: true },
         },
@@ -26,6 +36,16 @@ export async function GET(
             author: {
               select: { id: true, name: true, image: true, role: true },
             },
+            attachments: {
+              select: {
+                id: true,
+                filename: true,
+                originalName: true,
+                mimeType: true,
+                size: true,
+                url: true,
+              },
+            },
             reactions: {
               select: { type: true, userId: true },
             },
@@ -34,6 +54,16 @@ export async function GET(
                 author: {
                   select: { id: true, name: true, image: true, role: true },
                 },
+                attachments: {
+                  select: {
+                    id: true,
+                    filename: true,
+                    originalName: true,
+                    mimeType: true,
+                    size: true,
+                    url: true,
+                  },
+                },
                 reactions: {
                   select: { type: true, userId: true },
                 },
@@ -41,6 +71,16 @@ export async function GET(
                   include: {
                     author: {
                       select: { id: true, name: true, image: true, role: true },
+                    },
+                    attachments: {
+                      select: {
+                        id: true,
+                        filename: true,
+                        originalName: true,
+                        mimeType: true,
+                        size: true,
+                        url: true,
+                      },
                     },
                     reactions: {
                       select: { type: true, userId: true },

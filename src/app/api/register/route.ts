@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { generateRecoveryCode } from "@/lib/utils";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -26,17 +27,26 @@ export async function POST(request: Request) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    const recoveryCode = generateRecoveryCode();
+    // Hash the code without dashes for comparison during recovery
+    const cleanCode = recoveryCode.replace(/-/g, '');
+    const hashedRecoveryCode = await bcrypt.hash(cleanCode, 12);
 
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
+        recoveryCode: hashedRecoveryCode,
       },
     });
 
     return NextResponse.json(
-      { message: "User created successfully", userId: user.id },
+      { 
+        message: "User created successfully", 
+        userId: user.id,
+        recoveryCode: recoveryCode // Return plain code only once
+      },
       { status: 201 }
     );
   } catch (error) {

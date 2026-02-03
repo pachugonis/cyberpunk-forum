@@ -2,10 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { CategoryCard, TopicCard } from "@/components/forum";
 import { GlitchText } from "@/components/cyberpunk";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
-async function getHomeData() {
+async function getHomeData(sort?: string) {
   const [categories, recentTopics] = await Promise.all([
     prisma.category.findMany({
       orderBy: { order: "asc" },
@@ -17,10 +19,12 @@ async function getHomeData() {
     }),
     prisma.topic.findMany({
       take: 10,
-      orderBy: [
-        { isPinned: "desc" },
-        { createdAt: "desc" },
-      ],
+      orderBy: sort === "latest"
+        ? [{ createdAt: "desc" }]
+        : [
+            { isPinned: "desc" },
+            { createdAt: "desc" },
+          ],
       include: {
         author: {
           select: { id: true, name: true, image: true, role: true },
@@ -35,8 +39,15 @@ async function getHomeData() {
   return { categories, recentTopics };
 }
 
-export default async function HomePage() {
-  const { categories, recentTopics } = await getHomeData();
+export const revalidate = 60; // Revalidate every 60 seconds
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: { sort?: string };
+}) {
+  const { categories, recentTopics } = await getHomeData(searchParams.sort);
+  const t = await getTranslations('home');
 
   return (
     <div className="space-y-8">
@@ -44,18 +55,18 @@ export default async function HomePage() {
       <div className="flex items-center justify-between">
         <div>
           <GlitchText 
-            text="WELCOME TO NIGHTCITY" 
+            text={t('welcome')}
             as="h1"
             className="text-2xl md:text-3xl font-bold text-[var(--cyber-cyan)] mb-2"
           />
           <p className="text-muted-foreground font-mono text-sm">
-            The underground network for netrunners, fixers, and edgerunners.
+            {t('subtitle')}
           </p>
         </div>
         <Link href="/topic/new">
           <Button className="btn-cyber hidden sm:flex">
             <Plus className="h-4 w-4 mr-2" />
-            NEW TOPIC
+            {t('newTopic')}
           </Button>
         </Link>
       </div>
@@ -63,7 +74,7 @@ export default async function HomePage() {
       {/* Categories */}
       <section>
         <h2 className="text-lg font-bold mb-4 text-[var(--cyber-magenta)] font-mono uppercase tracking-wider">
-          // Categories
+          {t('categoriesTitle')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {categories.map((category) => (
@@ -73,16 +84,16 @@ export default async function HomePage() {
         {categories.length === 0 && (
           <div className="card-cyber p-8 text-center">
             <p className="text-muted-foreground font-mono">
-              No categories yet. Check back later.
+              {t('noCategories')}
             </p>
           </div>
         )}
       </section>
 
       {/* Recent Topics */}
-      <section>
+      <section id="topics">
         <h2 className="text-lg font-bold mb-4 text-[var(--cyber-yellow)] font-mono uppercase tracking-wider">
-          // Recent Activity
+          {t('recentActivity')}
         </h2>
         <div className="space-y-3">
           {recentTopics.map((topic) => (
@@ -92,12 +103,12 @@ export default async function HomePage() {
         {recentTopics.length === 0 && (
           <div className="card-cyber p-8 text-center">
             <p className="text-muted-foreground font-mono mb-4">
-              No topics yet. Be the first to start a conversation.
+              {t('noTopics')}
             </p>
             <Link href="/topic/new">
               <Button className="btn-cyber">
                 <Plus className="h-4 w-4 mr-2" />
-                CREATE FIRST TOPIC
+                {t('createFirstTopic')}
               </Button>
             </Link>
           </div>

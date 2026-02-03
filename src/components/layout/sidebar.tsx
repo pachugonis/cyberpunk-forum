@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useTranslations } from 'next-intl';
 import { cn } from "@/lib/utils";
 import { 
   MessageSquare, 
@@ -26,8 +27,14 @@ interface Category {
   };
 }
 
+interface Stats {
+  userCount: number;
+  topicCount: number;
+}
+
 interface SidebarProps {
   categories?: Category[];
+  stats?: Stats;
   className?: string;
 }
 
@@ -40,8 +47,11 @@ const iconMap: Record<string, LucideIcon> = {
   Gamepad2,
 };
 
-export function Sidebar({ categories = [], className }: SidebarProps) {
+export function Sidebar({ categories = [], stats, className }: SidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const sort = searchParams.get('sort');
+  const t = useTranslations('sidebar');
 
   return (
     <aside className={cn("w-64 shrink-0", className)}>
@@ -49,14 +59,14 @@ export function Sidebar({ categories = [], className }: SidebarProps) {
         {/* Quick Links */}
         <div className="card-cyber p-4">
           <h3 className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-3">
-            Quick Access
+            {t('navigation')}
           </h3>
           <nav className="space-y-1">
             <Link
               href="/"
               className={cn(
                 "flex items-center gap-2 px-3 py-2 text-sm font-mono transition-colors rounded-none",
-                pathname === "/"
+                pathname === "/" && !sort
                   ? "bg-[var(--cyber-cyan)]/10 text-[var(--cyber-cyan)] border-l-2 border-[var(--cyber-cyan)]"
                   : "text-muted-foreground hover:text-foreground hover:bg-[#1a1a24]"
               )}
@@ -65,10 +75,12 @@ export function Sidebar({ categories = [], className }: SidebarProps) {
               Trending
             </Link>
             <Link
-              href="/?sort=latest"
+              href="/?sort=latest#topics"
               className={cn(
                 "flex items-center gap-2 px-3 py-2 text-sm font-mono transition-colors rounded-none",
-                pathname === "/" && "text-muted-foreground hover:text-foreground hover:bg-[#1a1a24]"
+                pathname === "/" && sort === "latest"
+                  ? "bg-[var(--cyber-cyan)]/10 text-[var(--cyber-cyan)] border-l-2 border-[var(--cyber-cyan)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-[#1a1a24]"
               )}
             >
               <Clock className="h-4 w-4" />
@@ -80,7 +92,7 @@ export function Sidebar({ categories = [], className }: SidebarProps) {
         {/* Categories */}
         <div className="card-cyber p-4">
           <h3 className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-3">
-            Categories
+            {t('categories')}
           </h3>
           <nav className="space-y-1">
             {categories.map((category) => {
@@ -125,15 +137,15 @@ export function Sidebar({ categories = [], className }: SidebarProps) {
           <div className="space-y-2 text-sm font-mono">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Online</span>
-              <span className="text-[var(--cyber-cyan)]">--</span>
+              <span className="text-[var(--cyber-cyan)]">{stats?.userCount ?? '--'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Topics</span>
-              <span className="text-foreground">--</span>
+              <span className="text-foreground">{stats?.topicCount ?? '--'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Users</span>
-              <span className="text-foreground">--</span>
+              <span className="text-foreground">{stats?.userCount ?? '--'}</span>
             </div>
           </div>
         </div>

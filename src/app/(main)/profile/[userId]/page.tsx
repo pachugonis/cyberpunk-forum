@@ -2,11 +2,13 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
+import { auth } from "@/lib/auth";
 import { TopicCard } from "@/components/forum";
 import { GlitchText, HologramBadge, CyberCard } from "@/components/cyberpunk";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calendar, MessageSquare, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Calendar, MessageSquare, FileText, Mail } from "lucide-react";
 
 interface ProfilePageProps {
   params: Promise<{ userId: string }>;
@@ -53,13 +55,18 @@ async function getUser(userId: string) {
   return user;
 }
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { userId } = await params;
   const user = await getUser(userId);
+  const session = await auth();
 
   if (!user) {
     notFound();
   }
+
+  const isOwnProfile = session?.user?.id === userId;
 
   const roleVariant = user.role === "ADMIN" 
     ? "admin" 
@@ -120,6 +127,17 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 <span>{user._count.comments} comments</span>
               </div>
             </div>
+            
+            {!isOwnProfile && session?.user && (
+              <div className="mt-4">
+                <Link href={`/messages?userId=${user.id}`}>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Mail className="h-4 w-4" />
+                    Send Message
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </CyberCard>

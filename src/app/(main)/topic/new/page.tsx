@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { GlitchText } from "@/components/cyberpunk";
+import { FileUpload, type UploadedFile } from "@/components/forum";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,6 +26,7 @@ function NewTopicForm() {
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -57,7 +59,10 @@ function NewTopicForm() {
       const response = await fetch("/api/topics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          attachmentIds: uploadedFiles.map((f) => f.id),
+        }),
       });
 
       if (!response.ok) {
@@ -125,6 +130,19 @@ function NewTopicForm() {
           minLength={10}
           className="min-h-[200px] bg-[#1a1a24] border-[#2a2a35] focus:border-[var(--cyber-cyan)] font-mono resize-none"
           placeholder="Share your thoughts with the network..."
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[var(--cyber-cyan)] font-mono uppercase text-xs tracking-wider">
+          Attachments (Optional)
+        </Label>
+        <FileUpload
+          onFileUploaded={(file) => setUploadedFiles([...uploadedFiles, file])}
+          onFileRemoved={(fileId) =>
+            setUploadedFiles(uploadedFiles.filter((f) => f.id !== fileId))
+          }
+          uploadedFiles={uploadedFiles}
         />
       </div>
 

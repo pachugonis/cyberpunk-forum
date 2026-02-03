@@ -37,6 +37,8 @@ async function getCategory(slug: string) {
   return category;
 }
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
   const category = await getCategory(slug);

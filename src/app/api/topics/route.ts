@@ -7,6 +7,7 @@ const topicSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(200),
   content: z.string().min(10, "Content must be at least 10 characters"),
   categoryId: z.string(),
+  attachmentIds: z.array(z.string()).optional(),
 });
 
 export async function GET(request: Request) {
@@ -25,6 +26,16 @@ export async function GET(request: Request) {
         include: {
           author: {
             select: { id: true, name: true, image: true, role: true },
+          },
+          attachments: {
+            select: {
+              id: true,
+              filename: true,
+              originalName: true,
+              mimeType: true,
+              size: true,
+              url: true,
+            },
           },
           _count: {
             select: { comments: true, reactions: true },
@@ -70,7 +81,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, content, categoryId } = topicSchema.parse(body);
+    const { title, content, categoryId, attachmentIds } = topicSchema.parse(body);
 
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
@@ -89,10 +100,23 @@ export async function POST(request: Request) {
         content,
         categoryId,
         authorId: session.user.id,
+        attachments: attachmentIds && attachmentIds.length > 0 ? {
+          connect: attachmentIds.map(id => ({ id })),
+        } : undefined,
       },
       include: {
         author: {
           select: { id: true, name: true, image: true, role: true },
+        },
+        attachments: {
+          select: {
+            id: true,
+            filename: true,
+            originalName: true,
+            mimeType: true,
+            size: true,
+            url: true,
+          },
         },
       },
     });

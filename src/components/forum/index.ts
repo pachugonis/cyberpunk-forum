@@ -3,3 +3,8 @@ export { TopicCard } from "./topic-card";
 export { CommentItem } from "./comment-item";
 export { CommentForm } from "./comment-form";
 export { ReactionButton } from "./reaction-button";
+export { MessageList } from "./message-list";
+export { MessageItem } from "./message-item";
+export { ComposeMessage } from "./compose-message";
+export { FileUpload, type UploadedFile } from "./file-upload";
+export { AttachmentList } from "./attachment-list";

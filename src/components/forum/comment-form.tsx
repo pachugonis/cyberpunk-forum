@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { FileUpload, type UploadedFile } from "./file-upload";
 import { toast } from "sonner";
 
 interface CommentFormProps {
@@ -22,6 +23,7 @@ export function CommentForm({
   const router = useRouter();
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +39,11 @@ export function CommentForm({
       const response = await fetch(`/api/topics/${topicId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, parentId }),
+        body: JSON.stringify({
+          content,
+          parentId,
+          attachmentIds: uploadedFiles.map((f) => f.id),
+        }),
       });
 
       if (!response.ok) {
@@ -46,6 +52,7 @@ export function CommentForm({
       }
 
       setContent("");
+      setUploadedFiles([]);
       toast.success("Comment posted");
       router.refresh();
       onSuccess?.();
@@ -63,6 +70,14 @@ export function CommentForm({
         onChange={(e) => setContent(e.target.value)}
         placeholder={placeholder}
         className="min-h-[100px] bg-[#1a1a24] border-[#2a2a35] focus:border-[var(--cyber-cyan)] font-mono text-sm resize-none"
+      />
+      <FileUpload
+        onFileUploaded={(file) => setUploadedFiles([...uploadedFiles, file])}
+        onFileRemoved={(fileId) =>
+          setUploadedFiles(uploadedFiles.filter((f) => f.id !== fileId))
+        }
+        uploadedFiles={uploadedFiles}
+        maxFiles={3}
       />
       <div className="flex justify-end">
         <Button

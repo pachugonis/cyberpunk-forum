@@ -182,9 +182,9 @@ After seeding the database, you can login with:
 
 ## 🎯 Features Roadmap
 
-- [ ] Real-time notifications
-- [ ] Private messaging
-- [ ] File attachments
+- [x] Real-time notifications
+- [x] Private messaging
+- [x] File attachments
 - [ ] User reputation system
 - [ ] Advanced search filters
 - [ ] Markdown support in posts

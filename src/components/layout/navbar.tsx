@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { useTranslations } from 'next-intl';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -12,7 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { GlitchText } from "@/components/cyberpunk";
-import { Search, Menu, LogOut, User, Shield } from "lucide-react";
+import { LanguageSwitcher, NotificationBell } from "@/components/layout";
+import { Search, Menu, LogOut, User, Shield, MessageSquare } from "lucide-react";
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -20,6 +22,7 @@ interface NavbarProps {
 
 export function Navbar({ onMenuClick }: NavbarProps) {
   const { data: session } = useSession();
+  const t = useTranslations('nav');
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#2a2a35] bg-[#0a0a0f]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0a0a0f]/80">
@@ -50,13 +53,22 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-[var(--cyber-cyan)] transition-colors" />
               <div className="w-full h-10 pl-10 pr-4 bg-[#13131a] border border-[#2a2a35] rounded-none clip-cyber flex items-center text-muted-foreground text-sm font-mono group-hover:border-[var(--cyber-cyan)] transition-colors cursor-pointer">
-                Search the network...
+                {t('search')}
               </div>
             </div>
           </Link>
         </div>
 
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
+          <NotificationBell />
+          {session && (
+            <Link href="/messages">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-[var(--cyber-cyan)] relative">
+                <MessageSquare className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
           <Link href="/search" className="md:hidden">
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-[var(--cyber-cyan)]">
               <Search className="h-5 w-5" />
@@ -92,14 +104,14 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 <DropdownMenuItem asChild className="cursor-pointer hover:bg-[#1a1a24] focus:bg-[#1a1a24]">
                   <Link href={`/profile/${session.user?.id}`} className="flex items-center">
                     <User className="mr-2 h-4 w-4 text-[var(--cyber-cyan)]" />
-                    <span>Profile</span>
+                    <span>{t('profile')}</span>
                   </Link>
                 </DropdownMenuItem>
                 {session.user?.role === "ADMIN" && (
                   <DropdownMenuItem asChild className="cursor-pointer hover:bg-[#1a1a24] focus:bg-[#1a1a24]">
                     <Link href="/admin" className="flex items-center">
                       <Shield className="mr-2 h-4 w-4 text-[var(--cyber-magenta)]" />
-                      <span>Admin Panel</span>
+                      <span>{t('adminPanel')}</span>
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -109,7 +121,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                   onClick={() => signOut()}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Disconnect</span>
+                  <span>{t('disconnect')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -117,12 +129,12 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             <div className="flex items-center gap-2">
               <Link href="/login">
                 <Button variant="ghost" className="font-mono text-sm hover:text-[var(--cyber-cyan)]">
-                  JACK IN
+                  {t('jackIn')}
                 </Button>
               </Link>
               <Link href="/register">
                 <Button className="btn-cyber text-xs">
-                  REGISTER
+                  {t('register')}
                 </Button>
               </Link>
             </div>

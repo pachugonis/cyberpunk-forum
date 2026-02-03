@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HologramBadge } from "@/components/cyberpunk";
 import { ReactionButton } from "./reaction-button";
+import { AttachmentList } from "./attachment-list";
 import { Reply } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -23,6 +24,14 @@ interface CommentItemProps {
     reactions: Array<{
       type: string;
       userId: string;
+    }>;
+    attachments?: Array<{
+      id: string;
+      filename: string;
+      originalName: string;
+      mimeType: string;
+      size: number;
+      url: string;
     }>;
     replies?: CommentItemProps["comment"][];
   };
@@ -68,6 +77,12 @@ export function CommentItem({ comment, topicId, currentUserId, depth = 0 }: Comm
             <div className="text-sm text-foreground whitespace-pre-wrap mb-3 font-mono">
               {comment.content}
             </div>
+            
+            {comment.attachments && comment.attachments.length > 0 && (
+              <div className="mb-3">
+                <AttachmentList attachments={comment.attachments} />
+              </div>
+            )}
             
             <div className="flex items-center gap-3">
               <ReactionButton

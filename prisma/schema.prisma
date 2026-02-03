@@ -13,6 +13,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String
+  recoveryCode  String?
   role          Role      @default(USER)
   bio           String?
   createdAt     DateTime  @default(now())
@@ -21,6 +22,10 @@ model User {
   topics        Topic[]
   comments      Comment[]
   reactions     Reaction[]
+  notifications Notification[]
+  sentMessages  Message[]      @relation("SentMessages")
+  receivedMessages Message[]   @relation("ReceivedMessages")
+  conversations Conversation[]
   
   @@map("users")
 }
@@ -65,9 +70,12 @@ model Topic {
   
   comments    Comment[]
   reactions   Reaction[]
+  attachments Attachment[]
   
   @@index([categoryId])
   @@index([authorId])
+  @@index([createdAt])
+  @@index([isPinned, createdAt])
   @@map("topics")
 }
 
@@ -88,9 +96,12 @@ model Comment {
   replies     Comment[] @relation("CommentReplies")
   
   reactions   Reaction[]
+  attachments Attachment[]
   
   @@index([topicId])
   @@index([authorId])
+  @@index([parentId])
+  @@index([createdAt])
   @@map("comments")
 }
 
@@ -121,4 +132,87 @@ enum ReactionType {
   FIRE
   CYBER
   HACK
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  content     String
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  topicId     String?
+  commentId   String?
+  actorId     String?
+  actorName   String?
+  
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  COMMENT_ON_TOPIC
+  REPLY_TO_COMMENT
+  REACTION_ON_TOPIC
+  REACTION_ON_COMMENT
+  MENTION
+  NEW_MESSAGE
+}
+
+model Conversation {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  participants User[]
+  messages     Message[]
+  
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId     String
+  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Attachment {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  url         String
+  createdAt   DateTime @default(now())
+  
+  topicId     String?
+  topic       Topic?   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  
+  commentId   String?
+  comment     Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  @@index([topicId])
+  @@index([commentId])
+  @@map("attachments")
 }

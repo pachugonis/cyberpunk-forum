@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { formatDistanceToNow } from "date-fns";
-import { CommentItem, CommentForm, ReactionButton } from "@/components/forum";
+import { CommentItem, CommentForm, ReactionButton, AttachmentList } from "@/components/forum";
 import { GlitchText, HologramBadge } from "@/components/cyberpunk";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Eye, MessageSquare, Pin, Lock } from "lucide-react";
@@ -66,6 +66,8 @@ async function getTopic(id: string) {
 
   return topic;
 }
+
+export const revalidate = 30; // Revalidate every 30 seconds for more fresh comments
 
 export default async function TopicPage({ params }: TopicPageProps) {
   const { id } = await params;
@@ -157,6 +159,13 @@ export default async function TopicPage({ params }: TopicPageProps) {
         <div className="prose prose-invert max-w-none font-mono text-sm whitespace-pre-wrap mb-6">
           {topic.content}
         </div>
+
+        {/* Attachments */}
+        {topic.attachments && topic.attachments.length > 0 && (
+          <div className="mb-6">
+            <AttachmentList attachments={topic.attachments} />
+          </div>
+        )}
 
         {/* Stats and reactions */}
         <div className="flex items-center gap-4 pt-4 border-t border-[#2a2a35]">

@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { GlitchText } from "@/components/cyberpunk";
+import { useTranslations } from 'next-intl';
 
 export function Footer() {
+  const t = useTranslations('footer');
   return (
     <footer className="border-t border-[#2a2a35] bg-[#0a0a0f] mt-auto">
       <div className="container px-4 py-8">
@@ -18,7 +22,7 @@ export function Footer() {
               />
             </div>
             <p className="text-sm text-muted-foreground font-mono">
-              The underground network for netrunners, fixers, and edgerunners.
+              {t('tagline')}
             </p>
           </div>
 
