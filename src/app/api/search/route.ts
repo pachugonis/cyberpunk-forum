@@ -20,6 +20,7 @@ export async function GET(request: Request) {
 
     // Build dynamic where clause
     const whereClause: any = {
+      deletedAt: null, // Exclude deleted topics
       OR: [
         { title: { contains: query } },
         { content: { contains: query } },

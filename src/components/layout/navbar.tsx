@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GlitchText } from "@/components/cyberpunk";
 import { LanguageSwitcher, NotificationBell } from "@/components/layout";
-import { Search, Menu, LogOut, User, Shield, MessageSquare } from "lucide-react";
+import { Search, Menu, LogOut, User, Shield, MessageSquare, Settings } from "lucide-react";
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -105,6 +105,12 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                   <Link href={`/profile/${session.user?.id}`} className="flex items-center">
                     <User className="mr-2 h-4 w-4 text-[var(--cyber-cyan)]" />
                     <span>{t('profile')}</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer hover:bg-[#1a1a24] focus:bg-[#1a1a24]">
+                  <Link href="/settings" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4 text-[var(--cyber-cyan)]" />
+                    <span>{t('settings')}</span>
                   </Link>
                 </DropdownMenuItem>
                 {session.user?.role === "ADMIN" && (

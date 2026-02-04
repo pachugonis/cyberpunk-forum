@@ -152,6 +152,14 @@ export async function PUT(
       );
     }
 
+    // Cannot edit deleted topics
+    if (topic.deletedAt) {
+      return NextResponse.json(
+        { error: "Cannot edit deleted topic" },
+        { status: 403 }
+      );
+    }
+
     const isAuthor = topic.authorId === session.user.id;
     const isAdmin = session.user.role === "ADMIN";
     const isModerator = session.user.role === "MODERATOR";

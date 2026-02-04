@@ -13,3 +13,5 @@ export { TopicActions } from "./topic-actions";
 export { EditTopicDialog } from "./edit-topic-dialog";
 export { ReputationBadge } from "./reputation-badge";
 export { ReportButton } from "./report-button";
+export { UserBadge, BadgeList, BadgeStats } from "./user-badge";
+export { MarkdownContent } from "./markdown-content";

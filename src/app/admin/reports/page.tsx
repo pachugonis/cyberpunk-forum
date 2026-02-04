@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { useTranslations, useLocale } from "next-intl";
+import { getDateFnsLocale } from "@/lib/date-locale";
 
 interface Report {
   id: string;
@@ -56,6 +58,9 @@ export default function ReportsPage() {
     resolved: 0,
     dismissed: 0,
   });
+  const t = useTranslations('admin');
+  const locale = useLocale();
+  const dateLocale = getDateFnsLocale(locale);
 
   const fetchReports = async (status?: string) => {
     try {
@@ -152,10 +157,10 @@ export default function ReportsPage() {
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { color: string; text: string }> = {
-      PENDING: { color: "bg-[var(--cyber-yellow)]", text: "Pending" },
-      REVIEWING: { color: "bg-[var(--cyber-cyan)]", text: "Reviewing" },
-      RESOLVED: { color: "bg-[var(--cyber-green)]", text: "Resolved" },
-      DISMISSED: { color: "bg-gray-500", text: "Dismissed" },
+      PENDING: { color: "bg-[var(--cyber-yellow)]", text: t('pending') },
+      REVIEWING: { color: "bg-[var(--cyber-cyan)]", text: t('reviewing') },
+      RESOLVED: { color: "bg-[var(--cyber-green)]", text: t('resolved') },
+      DISMISSED: { color: "bg-gray-500", text: t('dismissed') },
     };
 
     const variant = variants[status] || variants.PENDING;
@@ -171,11 +176,11 @@ export default function ReportsPage() {
     <div className="container mx-auto py-6 px-4 max-w-7xl">
       <div className="mb-6">
         <GlitchText
-          text="Reports Management"
+          text={t('reportsManagement')}
           className="text-3xl font-bold mb-2"
         />
         <p className="text-muted-foreground font-mono">
-          Review and manage user reports
+          {t('reviewReports')}
         </p>
       </div>
 
@@ -183,7 +188,7 @@ export default function ReportsPage() {
         <CyberCard className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground font-mono">Pending</p>
+              <p className="text-sm text-muted-foreground font-mono">{t('pending')}</p>
               <p className="text-2xl font-bold text-[var(--cyber-yellow)]">
                 {stats.pending}
               </p>
@@ -194,7 +199,7 @@ export default function ReportsPage() {
         <CyberCard className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground font-mono">Reviewing</p>
+              <p className="text-sm text-muted-foreground font-mono">{t('reviewing')}</p>
               <p className="text-2xl font-bold text-[var(--cyber-cyan)]">
                 {stats.reviewing}
               </p>
@@ -205,7 +210,7 @@ export default function ReportsPage() {
         <CyberCard className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground font-mono">Resolved</p>
+              <p className="text-sm text-muted-foreground font-mono">{t('resolved')}</p>
               <p className="text-2xl font-bold text-[var(--cyber-green)]">
                 {stats.resolved}
               </p>
@@ -216,7 +221,7 @@ export default function ReportsPage() {
         <CyberCard className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground font-mono">Dismissed</p>
+              <p className="text-sm text-muted-foreground font-mono">{t('dismissed')}</p>
               <p className="text-2xl font-bold text-gray-500">
                 {stats.dismissed}
               </p>
@@ -230,16 +235,16 @@ export default function ReportsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full justify-start bg-[#0a0a0f] border-b border-[#2a2a35]">
             <TabsTrigger value="PENDING" className="font-mono">
-              Pending ({stats.pending})
+              {t('pending')} ({stats.pending})
             </TabsTrigger>
             <TabsTrigger value="REVIEWING" className="font-mono">
-              Reviewing ({stats.reviewing})
+              {t('reviewing')} ({stats.reviewing})
             </TabsTrigger>
             <TabsTrigger value="RESOLVED" className="font-mono">
-              Resolved ({stats.resolved})
+              {t('resolved')} ({stats.resolved})
             </TabsTrigger>
             <TabsTrigger value="DISMISSED" className="font-mono">
-              Dismissed ({stats.dismissed})
+              {t('dismissed')} ({stats.dismissed})
             </TabsTrigger>
           </TabsList>
 
@@ -281,6 +286,7 @@ export default function ReportsPage() {
                             <p className="text-xs text-muted-foreground font-mono">
                               {formatDistanceToNow(new Date(report.createdAt), {
                                 addSuffix: true,
+                                locale: dateLocale,
                               })}
                             </p>
                           </div>

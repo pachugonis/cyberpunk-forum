@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { GlitchText, CyberCard } from "@/components/cyberpunk";
 import { Users, FileText, MessageSquare, FolderTree, Flag } from "lucide-react";
+import { getTranslations } from 'next-intl/server';
 
 async function getStats() {
   const [userCount, topicCount, commentCount, categoryCount, reportCount] = await Promise.all([
@@ -16,13 +17,14 @@ async function getStats() {
 
 export default async function AdminDashboard() {
   const stats = await getStats();
+  const t = await getTranslations('admin');
 
   const statCards = [
-    { label: "Users", value: stats.userCount, icon: Users, color: "var(--cyber-cyan)" },
-    { label: "Topics", value: stats.topicCount, icon: FileText, color: "var(--cyber-magenta)" },
+    { label: t('users'), value: stats.userCount, icon: Users, color: "var(--cyber-cyan)" },
+    { label: t('totalTopics'), value: stats.topicCount, icon: FileText, color: "var(--cyber-magenta)" },
     { label: "Comments", value: stats.commentCount, icon: MessageSquare, color: "var(--cyber-yellow)" },
-    { label: "Categories", value: stats.categoryCount, icon: FolderTree, color: "var(--cyber-purple)" },
-    { label: "Pending Reports", value: stats.reportCount, icon: Flag, color: "var(--cyber-red)" },
+    { label: t('categories'), value: stats.categoryCount, icon: FolderTree, color: "var(--cyber-purple)" },
+    { label: t('pending') + " " + t('reports'), value: stats.reportCount, icon: Flag, color: "var(--cyber-red)" },
   ];
 
   return (
@@ -73,21 +75,21 @@ export default async function AdminDashboard() {
             className="p-4 bg-[#1a1a24] hover:bg-[#2a2a35] transition-colors clip-cyber text-center"
           >
             <FolderTree className="h-8 w-8 mx-auto mb-2 text-[var(--cyber-magenta)]" />
-            <p className="font-mono text-sm">Manage Categories</p>
+            <p className="font-mono text-sm">{t('manageCategories')}</p>
           </a>
           <a
             href="/admin/users"
             className="p-4 bg-[#1a1a24] hover:bg-[#2a2a35] transition-colors clip-cyber text-center"
           >
             <Users className="h-8 w-8 mx-auto mb-2 text-[var(--cyber-cyan)]" />
-            <p className="font-mono text-sm">Manage Users</p>
+            <p className="font-mono text-sm">{t('manageUsers')}</p>
           </a>
           <a
             href="/admin/reports"
             className="p-4 bg-[#1a1a24] hover:bg-[#2a2a35] transition-colors clip-cyber text-center relative"
           >
             <Flag className="h-8 w-8 mx-auto mb-2 text-[var(--cyber-red)]" />
-            <p className="font-mono text-sm">Manage Reports</p>
+            <p className="font-mono text-sm">{t('manageReports')}</p>
             {stats.reportCount > 0 && (
               <span className="absolute top-2 right-2 bg-[var(--cyber-red)] text-black text-xs font-bold px-2 py-1 rounded-full">
                 {stats.reportCount}
@@ -99,7 +101,7 @@ export default async function AdminDashboard() {
             className="p-4 bg-[#1a1a24] hover:bg-[#2a2a35] transition-colors clip-cyber text-center"
           >
             <FileText className="h-8 w-8 mx-auto mb-2 text-[var(--cyber-yellow)]" />
-            <p className="font-mono text-sm">View Forum</p>
+            <p className="font-mono text-sm">{t('viewForum')}</p>
           </a>
         </div>
       </CyberCard>

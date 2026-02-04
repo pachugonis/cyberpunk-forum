@@ -13,11 +13,20 @@ async function getHomeData(sort?: string) {
       orderBy: { order: "asc" },
       include: {
         _count: {
-          select: { topics: true },
+          select: { 
+            topics: {
+              where: {
+                deletedAt: null, // Exclude deleted topics from count
+              },
+            },
+          },
         },
       },
     }),
     prisma.topic.findMany({
+      where: {
+        deletedAt: null, // Exclude deleted topics
+      },
       take: 10,
       orderBy: sort === "latest"
         ? [{ createdAt: "desc" }]

@@ -15,6 +15,7 @@
     "categories": "Категории",
     "search": "Поиск по сети...",
     "profile": "Профиль",
+    "settings": "Настройки",
     "messages": "Сообщения",
     "adminPanel": "Панель администратора",
     "disconnect": "Отключиться",
@@ -94,11 +95,45 @@
       "passwordMismatch": "Пароли не совпадают",
       "error": "Ошибка восстановления",
       "success": "Пароль успешно сброшен!"
+    },
+    "twoFactor": {
+      "title": "ДВУХФАКТОРНАЯ АУТЕНТИФИКАЦИЯ",
+      "subtitle": "УСИЛЕННЫЙ ПРОТОКОЛ БЕЗОПАСНОСТИ",
+      "enable": "ВКЛЮЧИТЬ 2FA",
+      "disable": "ОТКЛЮЧИТЬ 2FA",
+      "enabled": "2FA ВКЛЮЧЕНА",
+      "disabled": "2FA ОТКЛЮЧЕНА",
+      "setup": "Настройка двухфакторной аутентификации",
+      "setupDescription": "Отсканируйте этот QR-код с помощью приложения-аутентификатора (Google Authenticator, Authy и т.д.)",
+      "manualEntry": "Или введите этот ключ вручную:",
+      "verificationCode": "Код подтверждения",
+      "verifyAndEnable": "ПРОВЕРИТЬ И ВКЛЮЧИТЬ",
+      "verifying": "ПРОВЕРКА...",
+      "enterCode": "Введите 6-значный код",
+      "codePlaceholder": "000000",
+      "backupCodes": "Резервные коды",
+      "backupCodesDescription": "Сохраните эти резервные коды в безопасном месте. Каждый можно использовать один раз, если вы потеряете доступ к аутентификатору.",
+      "success": "Двухфакторная аутентификация успешно включена!",
+      "disableSuccess": "Двухфакторная аутентификация успешно отключена!",
+      "error": "Не удалось настроить двухфакторную аутентификацию",
+      "invalidCode": "Неверный код подтверждения",
+      "required": "Требуется подтверждение 2FA",
+      "loginTitle": "ДВУХФАКТОРНАЯ ПРОВЕРКА",
+      "loginSubtitle": "ВВЕДИТЕ КОД ИЗ ПРИЛОЖЕНИЯ-АУТЕНТИФИКАТОРА",
+      "verify": "ПРОВЕРИТЬ",
+      "cancel": "Отмена",
+      "qrCodeAlt": "QR-код для 2FA"
     }
   },
   "sidebar": {
     "navigation": "Навигация",
-    "categories": "Категории"
+    "categories": "Категории",
+    "trending": "Популярное",
+    "latest": "Последнее",
+    "networkStats": "Статистика сети",
+    "online": "Онлайн",
+    "users": "Пользователи",
+    "topics": "Темы"
   },
   "footer": {
     "tagline": "Подпольная сеть Найт-Сити",
@@ -129,7 +164,9 @@
     "updateTopic": "ОБНОВИТЬ ТЕМУ",
     "cancelEdit": "Отмена",
     "editedAt": "отредактировано",
-    "deletedAt": "удалено"
+    "deletedAt": "удалено",
+    "backTo": "Назад к",
+    "locked": "ЗАБЛОКИРОВАНО"
   },
   "comment": {
     "addComment": "Добавить комментарий",
@@ -163,7 +200,20 @@
     "comments": "Комментарии",
     "reactions": "Реакции",
     "reputation": "Репутация",
-    "reputationPoints": "очков"
+    "reputationPoints": "очков",
+    "backToForum": "Назад на форум",
+    "joined": "Присоединился",
+    "sendMessage": "Отправить сообщение",
+    "achievementsAndBadges": "Достижения и значки",
+    "earnedBadges": "Полученные значки",
+    "allBadges": "Все значки",
+    "noTopicsYet": "Тем пока нет.",
+    "noCommentsYet": "Комментариев пока нет.",
+    "inResponseTo": "В ответ на:",
+    "badges": "Значки",
+    "settings": "Настройки",
+    "security": "Безопасность",
+    "securitySettings": "Настройки безопасности"
   },
   "admin": {
     "dashboard": "Панель администратора",
@@ -173,7 +223,16 @@
     "manageCategories": "Управление категориями",
     "totalUsers": "Всего пользователей",
     "totalCategories": "Всего категорий",
-    "totalTopics": "Всего тем"
+    "totalTopics": "Всего тем",
+    "reports": "Жалобы",
+    "reportsManagement": "Управление жалобами",
+    "reviewReports": "Просмотр и управление жалобами пользователей",
+    "pending": "Ожидают",
+    "reviewing": "На рассмотрении",
+    "resolved": "Решено",
+    "dismissed": "Отклонено",
+    "manageReports": "Управление жалобами",
+    "viewForum": "Посмотреть форум"
   },
   "search": {
     "title": "Поиск",
@@ -250,6 +309,98 @@
       "inappropriate": "Неприемлемый контент",
       "illegal": "Незаконный контент",
       "other": "Другое"
+    }
+  },
+  "badges": {
+    "title": "Достижения и значки",
+    "earnedBadges": "Полученные значки",
+    "allBadges": "Все значки",
+    "noBadges": "Значки еще не получены",
+    "earned": "Получено",
+    "stats": {
+      "total": "Всего",
+      "common": "Обычные",
+      "rare": "Редкие",
+      "epic": "Эпические",
+      "legendary": "Легендарные"
+    },
+    "types": {
+      "FIRST_TOPIC": {
+        "name": "Первый пост",
+        "description": "Создали свою первую тему"
+      },
+      "TOPIC_STARTER": {
+        "name": "Зачинатель тем",
+        "description": "Создали 10 тем"
+      },
+      "TOPIC_MASTER": {
+        "name": "Мастер тем",
+        "description": "Создали 50 тем"
+      },
+      "TOPIC_LEGEND": {
+        "name": "Легенда тем",
+        "description": "Создали 100 тем"
+      },
+      "FIRST_COMMENT": {
+        "name": "Первые слова",
+        "description": "Оставили свой первый комментарий"
+      },
+      "COMMENTATOR": {
+        "name": "Комментатор",
+        "description": "Оставили 50 комментариев"
+      },
+      "CONVERSATION_MASTER": {
+        "name": "Мастер бесед",
+        "description": "Оставили 200 комментариев"
+      },
+      "POPULAR": {
+        "name": "Популярный",
+        "description": "Получили 50 реакций на ваши посты"
+      },
+      "INFLUENCER": {
+        "name": "Влиятельный",
+        "description": "Получили 200 реакций на ваши посты"
+      },
+      "VIRAL": {
+        "name": "Вирусный",
+        "description": "Получили 500 реакций на ваши посты"
+      },
+      "RISING_STAR": {
+        "name": "Восходящая звезда",
+        "description": "Достигли 100 очков репутации"
+      },
+      "VETERAN": {
+        "name": "Ветеран",
+        "description": "Достигли 500 очков репутации"
+      },
+      "LEGEND": {
+        "name": "Легенда",
+        "description": "Достигли 1000 очков репутации"
+      },
+      "EARLY_ADOPTER": {
+        "name": "Ранний последователь",
+        "description": "Присоединились в первый месяц"
+      },
+      "ACTIVE_MEMBER": {
+        "name": "Активный участник",
+        "description": "Активны в течение 30 дней"
+      },
+      "DEDICATED": {
+        "name": "Преданный",
+        "description": "Активны в течение 6 месяцев"
+      },
+      "HELPFUL": {
+        "name": "Полезный",
+        "description": "Получили 100 реакций на комментарии"
+      },
+      "DISCUSSION_STARTER": {
+        "name": "Зачинатель дискуссий",
+        "description": "Создали темы с 500+ комментариями"
+      },
+      "COMMUNITY_BUILDER": {
+        "name": "Строитель сообщества",
+        "description": "100 тем и 300 комментариев"
+      }
     }
   }
 }

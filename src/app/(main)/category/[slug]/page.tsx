@@ -15,6 +15,9 @@ async function getCategory(slug: string) {
     where: { slug },
     include: {
       topics: {
+        where: {
+          deletedAt: null, // Exclude deleted topics
+        },
         orderBy: [
           { isPinned: "desc" },
           { createdAt: "desc" },
@@ -29,7 +32,13 @@ async function getCategory(slug: string) {
         },
       },
       _count: {
-        select: { topics: true },
+        select: { 
+          topics: {
+            where: {
+              deletedAt: null, // Exclude deleted topics from count
+            },
+          },
+        },
       },
     },
   });

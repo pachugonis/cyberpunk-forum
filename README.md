@@ -180,6 +180,42 @@ After seeding the database, you can login with:
 
 ⚠️ **Important**: Change default credentials in production!
 
+## 📝 Markdown Support
+
+The forum supports full Markdown syntax in posts, comments, and messages:
+
+### Supported Features
+- **Headings** (`# H1`, `## H2`, `### H3`)
+- **Bold** (`**text**`) and *Italic* (`*text*`)
+- **Links** (`[text](url)`)
+- **Lists** (ordered and unordered)
+- **Code blocks** (inline `` `code` `` and fenced ` ```language `)
+- **Blockquotes** (`> quote`)
+- **Tables** (GitHub Flavored Markdown)
+- **Images** (`![alt](url)`)
+- **Horizontal rules** (`---`)
+- **Strikethrough** (`~~text~~`)
+- **Task lists** (`- [ ] task`)
+
+### Example
+```markdown
+# Welcome to Cyberpunk Forum
+
+This is a **bold** statement with *italic* text.
+
+## Code Example
+\`\`\`javascript
+console.log('Hello, world!');
+\`\`\`
+
+> This is a blockquote
+
+- List item 1
+- List item 2
+```
+
+All markdown content is sanitized for security using `rehype-sanitize`.
+
 ## 🎯 Features Roadmap
 
 - [x] Real-time notifications
@@ -187,11 +223,11 @@ After seeding the database, you can login with:
 - [x] File attachments
 - [x] User reputation system
 - [x] Advanced search filters
-- [ ] Markdown support in posts
+- [x] Markdown support in posts
 - [ ] Email verification
 - [ ] OAuth providers (Google, GitHub)
-- [ ] Report/flag system
-- [ ] User badges and achievements
+- [x] Report/flag system
+- [x] User badges and achievements
 
 ## 🤝 Contributing
 

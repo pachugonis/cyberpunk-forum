@@ -72,7 +72,7 @@ export function Sidebar({ categories = [], stats, className }: SidebarProps) {
               )}
             >
               <TrendingUp className="h-4 w-4" />
-              Trending
+              {t('trending')}
             </Link>
             <Link
               href="/?sort=latest#topics"
@@ -84,7 +84,7 @@ export function Sidebar({ categories = [], stats, className }: SidebarProps) {
               )}
             >
               <Clock className="h-4 w-4" />
-              Latest
+              {t('latest')}
             </Link>
           </nav>
         </div>
@@ -132,19 +132,19 @@ export function Sidebar({ categories = [], stats, className }: SidebarProps) {
         {/* Stats */}
         <div className="card-cyber p-4">
           <h3 className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-3">
-            Network Stats
+            {t('networkStats')}
           </h3>
           <div className="space-y-2 text-sm font-mono">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Online</span>
+              <span className="text-muted-foreground">{t('online')}</span>
               <span className="text-[var(--cyber-cyan)]">{stats?.userCount ?? '--'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Topics</span>
+              <span className="text-muted-foreground">{t('topics')}</span>
               <span className="text-foreground">{stats?.topicCount ?? '--'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Users</span>
+              <span className="text-muted-foreground">{t('users')}</span>
               <span className="text-foreground">{stats?.userCount ?? '--'}</span>
             </div>
           </div>

@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { TopicActions, EditTopicDialog, ReportButton } from "@/components/forum";
+import { TopicActions, EditTopicDialog, ReportButton, MarkdownContent } from "@/components/forum";
 import { GlitchText, HologramBadge } from "@/components/cyberpunk";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Pin, Lock } from "lucide-react";
+import { useTranslations, useLocale } from 'next-intl';
+import { getDateFnsLocale } from '@/lib/date-locale';
 
 interface TopicHeaderProps {
   topic: {
@@ -39,6 +41,9 @@ interface TopicHeaderProps {
 
 export function TopicHeader({ topic, currentUserId, userRole }: TopicHeaderProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const t = useTranslations('topic');
+  const locale = useLocale();
+  const dateLocale = getDateFnsLocale(locale);
   
   const isAuthor = currentUserId === topic.author.id;
   const isAdmin = userRole === "ADMIN";
@@ -58,7 +63,7 @@ export function TopicHeader({ topic, currentUserId, userRole }: TopicHeaderProps
         className="inline-flex items-center text-muted-foreground hover:text-[var(--cyber-cyan)] font-mono text-sm transition-colors"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to {topic.category.name}
+        {t('backTo')} {topic.category.name}
       </Link>
 
       {/* Topic */}
@@ -69,13 +74,13 @@ export function TopicHeader({ topic, currentUserId, userRole }: TopicHeaderProps
             {topic.isPinned && (
               <div className="flex items-center gap-1 text-[var(--cyber-yellow)] text-xs font-mono">
                 <Pin className="h-4 w-4" />
-                PINNED
+                {t('pinned')}
               </div>
             )}
             {topic.isLocked && (
               <div className="flex items-center gap-1 text-[var(--cyber-magenta)] text-xs font-mono">
                 <Lock className="h-4 w-4" />
-                LOCKED
+                {t('locked')}
               </div>
             )}
             <Link 
@@ -129,15 +134,15 @@ export function TopicHeader({ topic, currentUserId, userRole }: TopicHeaderProps
               </HologramBadge>
             </div>
             <div className="text-xs text-muted-foreground font-mono">
-              {formatDistanceToNow(new Date(topic.createdAt), { addSuffix: true })}
+              {formatDistanceToNow(new Date(topic.createdAt), { addSuffix: true, locale: dateLocale })}
               {topic.editedAt && (
                 <span className="ml-2 text-[var(--cyber-yellow)]">
-                  • edited {formatDistanceToNow(new Date(topic.editedAt), { addSuffix: true })}
+                  • {t('editedAt')} {formatDistanceToNow(new Date(topic.editedAt), { addSuffix: true, locale: dateLocale })}
                 </span>
               )}
               {topic.deletedAt && (
                 <span className="ml-2 text-red-400">
-                  • deleted {formatDistanceToNow(new Date(topic.deletedAt), { addSuffix: true })}
+                  • {t('deletedAt')} {formatDistanceToNow(new Date(topic.deletedAt), { addSuffix: true, locale: dateLocale })}
                 </span>
               )}
             </div>
@@ -145,9 +150,7 @@ export function TopicHeader({ topic, currentUserId, userRole }: TopicHeaderProps
         </div>
 
         {/* Content */}
-        <div className="prose prose-invert max-w-none font-mono text-sm whitespace-pre-wrap">
-          {topic.content}
-        </div>
+        <MarkdownContent content={topic.content} />
       </article>
 
       <EditTopicDialog

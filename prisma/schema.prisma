@@ -7,18 +7,20 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  password      String
-  recoveryCode  String?
-  role          Role      @default(USER)
-  bio           String?
-  reputation    Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  name               String?
+  email              String    @unique
+  emailVerified      DateTime?
+  image              String?
+  password           String
+  recoveryCode       String?
+  role               Role      @default(USER)
+  bio                String?
+  reputation         Int       @default(0)
+  twoFactorEnabled   Boolean   @default(false)
+  twoFactorSecret    String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
   
   topics        Topic[]
   comments      Comment[]
@@ -28,6 +30,7 @@ model User {
   receivedMessages Message[]   @relation("ReceivedMessages")
   conversations Conversation[]
   reports       Report[]
+  badges        Badge[]
   
   @@map("users")
 }
@@ -256,4 +259,18 @@ enum ReportStatus {
   REVIEWING
   RESOLVED
   DISMISSED
+}
+
+model Badge {
+  id        String   @id @default(cuid())
+  badgeType String
+  earnedAt  DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, badgeType])
+  @@index([userId])
+  @@index([badgeType])
+  @@map("badges")
 }

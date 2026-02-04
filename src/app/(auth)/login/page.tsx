@@ -12,8 +12,11 @@ import { Label } from "@/components/ui/label";
 export default function LoginPage() {
   const router = useRouter();
   const t = useTranslations('auth.login');
+  const t2fa = useTranslations('auth.twoFactor');
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,6 +28,26 @@ export default function LoginPage() {
     const password = formData.get("password") as string;
 
     try {
+      // First check if 2FA is required
+      const checkResponse = await fetch("/api/auth/2fa/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (checkResponse.ok) {
+        const { requiresTwoFactor } = await checkResponse.json();
+        
+        if (requiresTwoFactor) {
+          // Store credentials and show 2FA form
+          setRequiresTwoFactor(true);
+          setCredentials({ email, password });
+          setLoading(false);
+          return;
+        }
+      }
+
+      // If 2FA is not required, proceed with normal login
       const result = await signIn("credentials", {
         email,
         password,
@@ -43,6 +66,114 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  const handleTwoFactorSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const token = formData.get("token") as string;
+
+    try {
+      // Verify 2FA token
+      const response = await fetch("/api/auth/2fa/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: credentials.email,
+          password: credentials.password,
+          token,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || t2fa('invalidCode'));
+        setLoading(false);
+        return;
+      }
+
+      // Now sign in with NextAuth
+      const result = await signIn("credentials", {
+        email: credentials.email,
+        password: credentials.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError(t('invalidCredentials'));
+      } else {
+        router.push("/");
+        router.refresh();
+      }
+    } catch {
+      setError(t2fa('error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (requiresTwoFactor) {
+    return (
+      <div className="card-cyber p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-neon-cyan mb-2">
+            {t2fa('loginTitle')}
+          </h1>
+          <p className="text-muted-foreground font-mono text-sm">
+            {t2fa('loginSubtitle')}
+          </p>
+        </div>
+
+        <form onSubmit={handleTwoFactorSubmit} className="space-y-6">
+          {error && (
+            <div className="p-3 text-sm text-[var(--cyber-magenta)] border border-[var(--cyber-magenta)] bg-[var(--cyber-magenta)]/10 clip-cyber">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="token" className="text-[var(--cyber-cyan)] font-mono uppercase text-xs tracking-wider">
+              {t2fa('verificationCode')}
+            </Label>
+            <Input
+              id="token"
+              name="token"
+              type="text"
+              required
+              maxLength={6}
+              pattern="[0-9]{6}"
+              className="bg-[#1a1a24] border-[#2a2a35] focus:border-[var(--cyber-cyan)] focus:ring-[var(--cyber-cyan)]/20 font-mono text-center text-2xl tracking-widest"
+              placeholder={t2fa('codePlaceholder')}
+              autoComplete="off"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full btn-cyber h-12 text-base"
+          >
+            {loading ? (
+              <span className="animate-pulse">{t2fa('verifying')}</span>
+            ) : (
+              t2fa('verify')
+            )}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setRequiresTwoFactor(false)}
+            className="text-muted-foreground font-mono text-sm hover:text-[var(--cyber-cyan)] transition-all"
+          >
+            {t2fa('cancel')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="card-cyber p-8">

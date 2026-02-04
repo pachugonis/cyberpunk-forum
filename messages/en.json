@@ -15,6 +15,7 @@
     "categories": "Categories",
     "search": "Search the network...",
     "profile": "Profile",
+    "settings": "Settings",
     "messages": "Messages",
     "adminPanel": "Admin Panel",
     "disconnect": "Disconnect",
@@ -94,11 +95,45 @@
       "passwordMismatch": "Passwords do not match",
       "error": "Recovery failed",
       "success": "Password reset successfully!"
+    },
+    "twoFactor": {
+      "title": "TWO-FACTOR AUTHENTICATION",
+      "subtitle": "ENHANCED SECURITY PROTOCOL",
+      "enable": "ENABLE 2FA",
+      "disable": "DISABLE 2FA",
+      "enabled": "2FA ENABLED",
+      "disabled": "2FA DISABLED",
+      "setup": "Setup Two-Factor Authentication",
+      "setupDescription": "Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)",
+      "manualEntry": "Or enter this key manually:",
+      "verificationCode": "Verification Code",
+      "verifyAndEnable": "VERIFY & ENABLE",
+      "verifying": "VERIFYING...",
+      "enterCode": "Enter 6-digit code",
+      "codePlaceholder": "000000",
+      "backupCodes": "Backup Codes",
+      "backupCodesDescription": "Save these backup codes in a secure location. Each can be used once if you lose access to your authenticator.",
+      "success": "Two-factor authentication enabled successfully!",
+      "disableSuccess": "Two-factor authentication disabled successfully!",
+      "error": "Failed to setup two-factor authentication",
+      "invalidCode": "Invalid verification code",
+      "required": "2FA verification required",
+      "loginTitle": "TWO-FACTOR VERIFICATION",
+      "loginSubtitle": "ENTER YOUR AUTHENTICATOR CODE",
+      "verify": "VERIFY",
+      "cancel": "Cancel",
+      "qrCodeAlt": "2FA QR Code"
     }
   },
   "sidebar": {
     "navigation": "Navigation",
-    "categories": "Categories"
+    "categories": "Categories",
+    "trending": "Trending",
+    "latest": "Latest",
+    "networkStats": "Network Stats",
+    "online": "Online",
+    "users": "Users",
+    "topics": "Topics"
   },
   "footer": {
     "tagline": "The underground network for Night City",
@@ -129,7 +164,9 @@
     "updateTopic": "UPDATE TOPIC",
     "cancelEdit": "Cancel",
     "editedAt": "edited",
-    "deletedAt": "deleted"
+    "deletedAt": "deleted",
+    "backTo": "Back to",
+    "locked": "LOCKED"
   },
   "comment": {
     "addComment": "Add Comment",
@@ -163,7 +200,20 @@
     "comments": "Comments",
     "reactions": "Reactions",
     "reputation": "Reputation",
-    "reputationPoints": "pts"
+    "reputationPoints": "pts",
+    "backToForum": "Back to forum",
+    "joined": "Joined",
+    "sendMessage": "Send Message",
+    "achievementsAndBadges": "Achievements & Badges",
+    "earnedBadges": "Earned Badges",
+    "allBadges": "All Badges",
+    "noTopicsYet": "No topics yet.",
+    "noCommentsYet": "No comments yet.",
+    "inResponseTo": "In response to:",
+    "badges": "Badges",
+    "settings": "Settings",
+    "security": "Security",
+    "securitySettings": "Security Settings"
   },
   "admin": {
     "dashboard": "Admin Dashboard",
@@ -173,7 +223,16 @@
     "manageCategories": "Manage Categories",
     "totalUsers": "Total Users",
     "totalCategories": "Total Categories",
-    "totalTopics": "Total Topics"
+    "totalTopics": "Total Topics",
+    "reports": "Reports",
+    "reportsManagement": "Reports Management",
+    "reviewReports": "Review and manage user reports",
+    "pending": "Pending",
+    "reviewing": "Reviewing",
+    "resolved": "Resolved",
+    "dismissed": "Dismissed",
+    "manageReports": "Manage Reports",
+    "viewForum": "View Forum"
   },
   "search": {
     "title": "Search",
@@ -250,6 +309,98 @@
       "inappropriate": "Inappropriate content",
       "illegal": "Illegal content",
       "other": "Other"
+    }
+  },
+  "badges": {
+    "title": "Achievements & Badges",
+    "earnedBadges": "Earned Badges",
+    "allBadges": "All Badges",
+    "noBadges": "No badges earned yet",
+    "earned": "Earned",
+    "stats": {
+      "total": "Total",
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
+    },
+    "types": {
+      "FIRST_TOPIC": {
+        "name": "First Post",
+        "description": "Created your first topic"
+      },
+      "TOPIC_STARTER": {
+        "name": "Topic Starter",
+        "description": "Created 10 topics"
+      },
+      "TOPIC_MASTER": {
+        "name": "Topic Master",
+        "description": "Created 50 topics"
+      },
+      "TOPIC_LEGEND": {
+        "name": "Topic Legend",
+        "description": "Created 100 topics"
+      },
+      "FIRST_COMMENT": {
+        "name": "First Words",
+        "description": "Posted your first comment"
+      },
+      "COMMENTATOR": {
+        "name": "Commentator",
+        "description": "Posted 50 comments"
+      },
+      "CONVERSATION_MASTER": {
+        "name": "Conversation Master",
+        "description": "Posted 200 comments"
+      },
+      "POPULAR": {
+        "name": "Popular",
+        "description": "Received 50 reactions on your posts"
+      },
+      "INFLUENCER": {
+        "name": "Influencer",
+        "description": "Received 200 reactions on your posts"
+      },
+      "VIRAL": {
+        "name": "Viral",
+        "description": "Received 500 reactions on your posts"
+      },
+      "RISING_STAR": {
+        "name": "Rising Star",
+        "description": "Reached 100 reputation points"
+      },
+      "VETERAN": {
+        "name": "Veteran",
+        "description": "Reached 500 reputation points"
+      },
+      "LEGEND": {
+        "name": "Legend",
+        "description": "Reached 1000 reputation points"
+      },
+      "EARLY_ADOPTER": {
+        "name": "Early Adopter",
+        "description": "Joined in the first month"
+      },
+      "ACTIVE_MEMBER": {
+        "name": "Active Member",
+        "description": "Active for 30 days"
+      },
+      "DEDICATED": {
+        "name": "Dedicated",
+        "description": "Active for 6 months"
+      },
+      "HELPFUL": {
+        "name": "Helpful",
+        "description": "Received 100 reactions on comments"
+      },
+      "DISCUSSION_STARTER": {
+        "name": "Discussion Starter",
+        "description": "Created topics with 500+ total comments"
+      },
+      "COMMUNITY_BUILDER": {
+        "name": "Community Builder",
+        "description": "100 topics and 300 comments"
+      }
     }
   }
 }

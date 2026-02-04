@@ -6,6 +6,7 @@ import { HologramBadge } from "@/components/cyberpunk";
 import { ReactionButton } from "./reaction-button";
 import { ReportButton } from "./report-button";
 import { AttachmentList } from "./attachment-list";
+import { MarkdownContent } from "./markdown-content";
 import { Reply, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -13,7 +14,8 @@ import { CommentForm } from "./comment-form";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { getDateFnsLocale } from '@/lib/date-locale';
 
 interface CommentItemProps {
   comment: {
@@ -55,6 +57,8 @@ export function CommentItem({ comment, topicId, currentUserId, depth = 0 }: Comm
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const t = useTranslations("comment");
+  const locale = useLocale();
+  const dateLocale = getDateFnsLocale(locale);
   
   const roleVariant = comment.author.role === "ADMIN" 
     ? "admin" 
@@ -151,16 +155,16 @@ export function CommentItem({ comment, topicId, currentUserId, depth = 0 }: Comm
                 {comment.author.role}
               </HologramBadge>
               <span className="text-xs text-muted-foreground font-mono">
-                {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true, locale: dateLocale })}
               </span>
               {comment.editedAt && !isDeleted && (
                 <span className="text-xs text-[var(--cyber-cyan)] font-mono">
-                  ({t("editedAt")} {formatDistanceToNow(new Date(comment.editedAt), { addSuffix: true })})
+                  ({t("editedAt")} {formatDistanceToNow(new Date(comment.editedAt), { addSuffix: true, locale: dateLocale })})
                 </span>
               )}
               {isDeleted && (
                 <span className="text-xs text-red-500 font-mono">
-                  ({t("deletedAt")} {formatDistanceToNow(new Date(comment.deletedAt!), { addSuffix: true })})
+                  ({t("deletedAt")} {formatDistanceToNow(new Date(comment.deletedAt!), { addSuffix: true, locale: dateLocale })})
                 </span>
               )}
             </div>
@@ -195,11 +199,11 @@ export function CommentItem({ comment, topicId, currentUserId, depth = 0 }: Comm
                 </div>
               </div>
             ) : (
-              <div className="text-sm text-foreground whitespace-pre-wrap mb-3 font-mono">
+              <div className="mb-3">
                 {isDeleted ? (
-                  <span className="text-muted-foreground italic">{t("deleted")}</span>
+                  <span className="text-muted-foreground italic text-sm font-mono">{t("deleted")}</span>
                 ) : (
-                  comment.content
+                  <MarkdownContent content={comment.content} />
                 )}
               </div>
             )}

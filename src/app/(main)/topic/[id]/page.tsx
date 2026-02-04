@@ -117,6 +117,11 @@ export default async function TopicPage({ params }: TopicPageProps) {
     notFound();
   }
 
+  // If topic is deleted, return 404
+  if (topic.deletedAt) {
+    notFound();
+  }
+
   return (
     <div className="space-y-6">
       <TopicHeader

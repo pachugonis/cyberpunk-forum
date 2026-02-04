@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MarkdownContent } from "./markdown-content";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 
@@ -34,7 +35,10 @@ export function MessageItem({ content, createdAt, isOwn, sender }: MessageItemPr
               : "bg-accent text-accent-foreground"
           )}
         >
-          <p className="text-sm">{content}</p>
+          <MarkdownContent 
+            content={content} 
+            className="prose-sm prose-p:mb-2 prose-p:last:mb-0"
+          />
         </div>
         <span className="text-xs text-muted-foreground mt-1">
           {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
