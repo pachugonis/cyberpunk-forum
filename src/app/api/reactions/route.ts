@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createNotification } from "@/lib/notifications";
+import {
+  awardTopicReactionReputation,
+  awardCommentReactionReputation,
+  removeTopicReactionReputation,
+  removeCommentReactionReputation,
+} from "@/lib/reputation";
 import { z } from "zod";
 
 const reactionSchema = z.object({
@@ -36,6 +42,26 @@ export async function POST(request: Request) {
       await prisma.reaction.delete({
         where: { id: existingReaction.id },
       });
+
+      // Get the target to remove reputation
+      if (targetType === "topic") {
+        const topic = await prisma.topic.findUnique({
+          where: { id: targetId },
+          select: { authorId: true },
+        });
+        if (topic) {
+          await removeTopicReactionReputation(topic.authorId);
+        }
+      } else {
+        const comment = await prisma.comment.findUnique({
+          where: { id: targetId },
+          select: { authorId: true },
+        });
+        if (comment) {
+          await removeCommentReactionReputation(comment.authorId);
+        }
+      }
+
       return NextResponse.json({ action: "removed" });
     }
 
@@ -86,6 +112,13 @@ export async function POST(request: Request) {
         topicId: targetType === "topic" ? targetId : undefined,
         commentId: targetType === "comment" ? targetId : undefined,
       });
+
+      // Award reputation for receiving a reaction
+      if (targetType === "topic") {
+        await awardTopicReactionReputation(targetAuthorId);
+      } else {
+        await awardCommentReactionReputation(targetAuthorId);
+      }
     }
 
     return NextResponse.json({ action: "added" }, { status: 201 });

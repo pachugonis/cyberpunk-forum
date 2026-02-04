@@ -16,6 +16,7 @@ model User {
   recoveryCode  String?
   role          Role      @default(USER)
   bio           String?
+  reputation    Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   

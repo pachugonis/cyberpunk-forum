@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { deductTopicDeletionReputation } from "@/lib/reputation";
 import { z } from "zod";
 
 const updateTopicSchema = z.object({
@@ -265,6 +266,9 @@ export async function DELETE(
       where: { id },
       data: { deletedAt: new Date() },
     });
+
+    // Deduct reputation for deleting a topic
+    await deductTopicDeletionReputation(topic.authorId);
 
     return NextResponse.json({ message: "Topic deleted" });
   } catch (error) {

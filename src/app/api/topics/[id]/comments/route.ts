@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createNotification } from "@/lib/notifications";
+import { awardCommentCreationReputation } from "@/lib/reputation";
 import { z } from "zod";
 
 const commentSchema = z.object({
@@ -139,6 +140,9 @@ export async function POST(
         commentId: comment.id,
       });
     }
+
+    // Award reputation for creating a comment
+    await awardCommentCreationReputation(session.user.id);
 
     return NextResponse.json(comment, { status: 201 });
   } catch (error) {

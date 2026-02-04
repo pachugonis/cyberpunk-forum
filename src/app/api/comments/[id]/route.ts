@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { deductCommentDeletionReputation } from "@/lib/reputation";
 import { z } from "zod";
 
 const updateCommentSchema = z.object({
@@ -189,6 +190,9 @@ export async function DELETE(
         content: "[deleted]",
       },
     });
+
+    // Deduct reputation for deleting a comment
+    await deductCommentDeletionReputation(comment.authorId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

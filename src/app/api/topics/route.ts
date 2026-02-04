@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { awardTopicCreationReputation } from "@/lib/reputation";
 import { z } from "zod";
 
 const topicSchema = z.object({
@@ -120,6 +121,9 @@ export async function POST(request: Request) {
         },
       },
     });
+
+    // Award reputation for creating a topic
+    await awardTopicCreationReputation(session.user.id);
 
     return NextResponse.json(topic, { status: 201 });
   } catch (error) {

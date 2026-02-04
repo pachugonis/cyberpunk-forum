@@ -185,8 +185,8 @@ After seeding the database, you can login with:
 - [x] Real-time notifications
 - [x] Private messaging
 - [x] File attachments
-- [ ] User reputation system
-- [ ] Advanced search filters
+- [x] User reputation system
+- [x] Advanced search filters
 - [ ] Markdown support in posts
 - [ ] Email verification
 - [ ] OAuth providers (Google, GitHub)

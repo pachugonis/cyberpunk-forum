@@ -161,7 +161,9 @@
     "joinedOn": "Joined on",
     "topics": "Topics",
     "comments": "Comments",
-    "reactions": "Reactions"
+    "reactions": "Reactions",
+    "reputation": "Reputation",
+    "reputationPoints": "pts"
   },
   "admin": {
     "dashboard": "Admin Dashboard",
@@ -207,5 +209,23 @@
     "back": "Back",
     "online": "Online",
     "offline": "Offline"
+  },
+  "reputation": {
+    "levels": {
+      "newbie": "Newbie",
+      "regular": "Regular",
+      "contributor": "Contributor",
+      "veteran": "Veteran",
+      "elite": "Elite",
+      "legend": "Legend"
+    },
+    "points": {
+      "topicCreate": "+10 pts for creating a topic",
+      "commentCreate": "+5 pts for creating a comment",
+      "reactionOnTopic": "+3 pts for receiving a reaction on topic",
+      "reactionOnComment": "+2 pts for receiving a reaction on comment",
+      "topicDelete": "-15 pts for deleting a topic",
+      "commentDelete": "-10 pts for deleting a comment"
+    }
   }
 }

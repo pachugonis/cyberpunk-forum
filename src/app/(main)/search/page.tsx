@@ -7,7 +7,9 @@ import { TopicCard } from "@/components/forum";
 import { GlitchText, CyberCard } from "@/components/cyberpunk";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, ArrowLeft, Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, ArrowLeft, Loader2, Filter, X } from "lucide-react";
 
 interface SearchResult {
   id: string;
@@ -23,10 +25,28 @@ interface SearchResult {
     image: string | null;
     role: string;
   };
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    icon: string | null;
+  };
   _count: {
     comments: number;
     reactions: number;
+    attachments: number;
   };
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface User {
+  id: string;
+  name: string | null;
 }
 
 function SearchContent() {
@@ -38,6 +58,26 @@ function SearchContent() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Filter states
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("recent");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [hasAttachments, setHasAttachments] = useState<boolean>(false);
+  
+  // Data for filters
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // Load categories on mount
+  useEffect(() => {
+    fetch("/api/categories")
+      .then(res => res.json())
+      .then(data => setCategories(data))
+      .catch(err => console.error("Failed to load categories:", err));
+  }, []);
 
   useEffect(() => {
     if (initialQuery) {
@@ -52,7 +92,20 @@ function SearchContent() {
     setSearched(true);
 
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+      // Build query params
+      const params = new URLSearchParams({
+        q: searchQuery,
+      });
+      
+      if (categoryFilter !== "all") params.append("category", categoryFilter);
+      if (sortBy !== "recent") params.append("sort", sortBy);
+      if (dateFrom) params.append("dateFrom", dateFrom);
+      if (dateTo) params.append("dateTo", dateTo);
+      if (statusFilter === "pinned") params.append("isPinned", "true");
+      if (statusFilter === "locked") params.append("isLocked", "true");
+      if (hasAttachments) params.append("hasAttachments", "true");
+
+      const response = await fetch(`/api/search?${params.toString()}`);
       const data = await response.json();
       setResults(data.results || []);
     } catch (error) {
@@ -71,22 +124,174 @@ function SearchContent() {
     }
   };
 
+  const resetFilters = () => {
+    setCategoryFilter("all");
+    setSortBy("recent");
+    setDateFrom("");
+    setDateTo("");
+    setStatusFilter("all");
+    setHasAttachments(false);
+    if (query) handleSearch(query);
+  };
+
+  const hasActiveFilters = categoryFilter !== "all" || sortBy !== "recent" || 
+    dateFrom || dateTo || statusFilter !== "all" || hasAttachments;
+
   return (
     <>
       {/* Search form */}
-      <form onSubmit={handleSubmit} className="flex gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search topics..."
-            className="pl-10 bg-[#1a1a24] border-[#2a2a35] focus:border-[var(--cyber-cyan)] font-mono"
-          />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search topics..."
+              className="pl-10 bg-[#1a1a24] border-[#2a2a35] focus:border-[var(--cyber-cyan)] font-mono"
+            />
+          </div>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`px-4 ${showFilters ? 'bg-[var(--cyber-cyan)]/10 border-[var(--cyber-cyan)]' : ''} ${hasActiveFilters ? 'border-[var(--cyber-cyan)]' : ''}`}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+          <Button type="submit" className="btn-cyber" disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "SEARCH"}
+          </Button>
         </div>
-        <Button type="submit" className="btn-cyber" disabled={loading}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "SEARCH"}
-        </Button>
+
+        {/* Advanced Filters */}
+        {showFilters && (
+          <CyberCard className="p-4 space-y-4 border-[var(--cyber-cyan)]/30">
+            <div className="flex items-center justify-between">
+              <h3 className="font-mono text-sm font-bold text-[var(--cyber-cyan)]">
+                ADVANCED FILTERS
+              </h3>
+              {hasActiveFilters && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetFilters}
+                  className="h-7 text-xs font-mono"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Reset
+                </Button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <Label className="text-xs font-mono text-muted-foreground">
+                  Category
+                </Label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="bg-[#1a1a24] border-[#2a2a35] font-mono text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a24] border-[#2a2a35]">
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort By */}
+              <div className="space-y-2">
+                <Label className="text-xs font-mono text-muted-foreground">
+                  Sort By
+                </Label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="bg-[#1a1a24] border-[#2a2a35] font-mono text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a24] border-[#2a2a35]">
+                    <SelectItem value="recent">Most Recent</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                    <SelectItem value="comments">Most Comments</SelectItem>
+                    <SelectItem value="reactions">Most Reactions</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Status Filter */}
+              <div className="space-y-2">
+                <Label className="text-xs font-mono text-muted-foreground">
+                  Status
+                </Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="bg-[#1a1a24] border-[#2a2a35] font-mono text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a24] border-[#2a2a35]">
+                    <SelectItem value="all">All Topics</SelectItem>
+                    <SelectItem value="pinned">Pinned Only</SelectItem>
+                    <SelectItem value="locked">Locked Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date From */}
+              <div className="space-y-2">
+                <Label className="text-xs font-mono text-muted-foreground">
+                  From Date
+                </Label>
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="bg-[#1a1a24] border-[#2a2a35] font-mono text-sm"
+                />
+              </div>
+
+              {/* Date To */}
+              <div className="space-y-2">
+                <Label className="text-xs font-mono text-muted-foreground">
+                  To Date
+                </Label>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="bg-[#1a1a24] border-[#2a2a35] font-mono text-sm"
+                />
+              </div>
+
+              {/* Has Attachments */}
+              <div className="space-y-2">
+                <Label className="text-xs font-mono text-muted-foreground">
+                  Attachments
+                </Label>
+                <Button
+                  type="button"
+                  variant={hasAttachments ? "default" : "outline"}
+                  className={`w-full font-mono text-sm ${hasAttachments ? 'bg-[var(--cyber-cyan)] text-black' : ''}`}
+                  onClick={() => setHasAttachments(!hasAttachments)}
+                >
+                  {hasAttachments ? "With Attachments" : "Any"}
+                </Button>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={() => query && handleSearch(query)}
+              className="w-full btn-cyber"
+              disabled={loading || !query}
+            >
+              Apply Filters
+            </Button>
+          </CyberCard>
+        )}
       </form>
 
       {/* Results */}

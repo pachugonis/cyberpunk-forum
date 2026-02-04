@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
 import { auth } from "@/lib/auth";
-import { TopicCard } from "@/components/forum";
+import { TopicCard, ReputationBadge } from "@/components/forum";
 import { GlitchText, HologramBadge, CyberCard } from "@/components/cyberpunk";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +24,7 @@ async function getUser(userId: string) {
       image: true,
       role: true,
       bio: true,
+      reputation: true,
       createdAt: true,
       topics: {
         orderBy: { createdAt: "desc" },
@@ -105,6 +106,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <HologramBadge variant={roleVariant}>
                 {user.role}
               </HologramBadge>
+              <ReputationBadge reputation={user.reputation} />
             </div>
             
             {user.bio && (

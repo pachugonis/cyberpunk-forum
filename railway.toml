@@ -4,3 +4,8 @@ buildCommand = "npm install --include=dev && npx prisma generate && npm run buil
 
 [deploy]
 startCommand = "npm run start"
+
+NPM_CONFIG_LEGACY_PEER_DEPS=true
+NEXTAUTH_SECRET= gks93kvlscba92jfbcysid921hfcnsue
+NEXTAUTH_URL=${{RAILWAY_PUBLIC_DOMAIN}}
+DATABASE_URL=file:./production.db

@@ -11,3 +11,4 @@ export { FileUpload, type UploadedFile } from "./file-upload";
 export { AttachmentList } from "./attachment-list";
 export { TopicActions } from "./topic-actions";
 export { EditTopicDialog } from "./edit-topic-dialog";
+export { ReputationBadge } from "./reputation-badge";

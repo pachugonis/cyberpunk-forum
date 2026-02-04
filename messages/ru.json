@@ -161,7 +161,9 @@
     "joinedOn": "Присоединился",
     "topics": "Темы",
     "comments": "Комментарии",
-    "reactions": "Реакции"
+    "reactions": "Реакции",
+    "reputation": "Репутация",
+    "reputationPoints": "очков"
   },
   "admin": {
     "dashboard": "Панель администратора",
@@ -207,5 +209,23 @@
     "back": "Назад",
     "online": "Онлайн",
     "offline": "Офлайн"
+  },
+  "reputation": {
+    "levels": {
+      "newbie": "Новичок",
+      "regular": "Обычный",
+      "contributor": "Участник",
+      "veteran": "Ветеран",
+      "elite": "Элита",
+      "legend": "Легенда"
+    },
+    "points": {
+      "topicCreate": "+10 очков за создание темы",
+      "commentCreate": "+5 очков за создание комментария",
+      "reactionOnTopic": "+3 очка за получение реакции на тему",
+      "reactionOnComment": "+2 очка за получение реакции на комментарий",
+      "topicDelete": "-15 очков за удаление темы",
+      "commentDelete": "-10 очков за удаление комментария"
+    }
   }
 }
