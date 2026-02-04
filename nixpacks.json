@@ -1,0 +1,16 @@
+{
+  "phases": {
+    "setup": {
+      "nixPkgs": ["nodejs_22"]
+    },
+    "install": {
+      "cmds": ["npm install --include=dev"]
+    },
+    "build": {
+      "cmds": ["npx prisma generate", "npm run build"]
+    }
+  },
+  "start": {
+    "cmd": "npm run start"
+  }
+}
