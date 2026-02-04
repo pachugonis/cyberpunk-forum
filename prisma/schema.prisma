@@ -61,6 +61,8 @@ model Topic {
   viewCount   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  editedAt    DateTime?
+  deletedAt   DateTime?
   
   authorId    String
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -84,6 +86,8 @@ model Comment {
   content     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  editedAt    DateTime?
+  deletedAt   DateTime?
   
   authorId    String
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)

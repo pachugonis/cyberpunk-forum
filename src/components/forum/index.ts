@@ -1,5 +1,6 @@
 export { CategoryCard } from "./category-card";
 export { TopicCard } from "./topic-card";
+export { TopicHeader } from "./topic-header";
 export { CommentItem } from "./comment-item";
 export { CommentForm } from "./comment-form";
 export { ReactionButton } from "./reaction-button";
@@ -8,3 +9,5 @@ export { MessageItem } from "./message-item";
 export { ComposeMessage } from "./compose-message";
 export { FileUpload, type UploadedFile } from "./file-upload";
 export { AttachmentList } from "./attachment-list";
+export { TopicActions } from "./topic-actions";
+export { EditTopicDialog } from "./edit-topic-dialog";

@@ -5,7 +5,7 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { prisma } from "@/lib/prisma";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
   "image/png",
@@ -34,8 +34,6 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const topicId = formData.get("topicId") as string | null;
-    const commentId = formData.get("commentId") as string | null;
 
     if (!file) {
       return NextResponse.json(
@@ -47,7 +45,7 @@ export async function POST(request: Request) {
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "File size exceeds 10MB limit" },
+        { error: "File size exceeds 1MB limit" },
         { status: 400 }
       );
     }
@@ -78,7 +76,7 @@ export async function POST(request: Request) {
     const filepath = join(uploadsDir, filename);
     await writeFile(filepath, buffer);
 
-    // Create attachment record in database
+    // Create attachment record in database (without topicId/commentId initially)
     const attachment = await prisma.attachment.create({
       data: {
         filename,
@@ -86,8 +84,6 @@ export async function POST(request: Request) {
         mimeType: file.type,
         size: file.size,
         url: `/uploads/${filename}`,
-        topicId: topicId || undefined,
-        commentId: commentId || undefined,
       },
     });
 
@@ -150,12 +146,14 @@ export async function DELETE(request: Request) {
     }
 
     // Check if user is authorized to delete
+    // Allow deletion if attachment is not yet connected to any topic/comment (orphaned)
+    const isOrphaned = !attachment.topicId && !attachment.commentId;
     const isAuthor = 
       attachment.topic?.authorId === session.user.id ||
       attachment.comment?.authorId === session.user.id;
     const isAdmin = session.user.role === "ADMIN" || session.user.role === "MODERATOR";
 
-    if (!isAuthor && !isAdmin) {
+    if (!isOrphaned && !isAuthor && !isAdmin) {
       return NextResponse.json(
         { error: "Unauthorized to delete this attachment" },
         { status: 403 }

@@ -64,6 +64,30 @@ export async function POST(
       }
     }
 
+    // Validate attachments exist and are orphaned (not connected to any topic/comment yet)
+    if (attachmentIds && attachmentIds.length > 0) {
+      const attachments = await prisma.attachment.findMany({
+        where: {
+          id: { in: attachmentIds },
+        },
+      });
+
+      // Filter out attachments that don't exist or are already connected
+      const validAttachmentIds = attachments
+        .filter(att => !att.topicId && !att.commentId)
+        .map(att => att.id);
+
+      if (validAttachmentIds.length !== attachmentIds.length) {
+        console.warn(
+          `Some attachments were invalid or already connected. Requested: ${attachmentIds.length}, Valid: ${validAttachmentIds.length}`
+        );
+      }
+
+      // Use only valid attachments
+      attachmentIds.length = 0;
+      attachmentIds.push(...validAttachmentIds);
+    }
+
     const comment = await prisma.comment.create({
       data: {
         content,

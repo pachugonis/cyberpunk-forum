@@ -22,7 +22,7 @@ export interface UploadedFile {
   url: string;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
 
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
@@ -59,7 +59,7 @@ export function FileUpload({
   onFileRemoved,
   uploadedFiles,
   maxFiles = 5,
-  maxSize = 10,
+  maxSize = 1,
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
