@@ -12,3 +12,4 @@ export { AttachmentList } from "./attachment-list";
 export { TopicActions } from "./topic-actions";
 export { EditTopicDialog } from "./edit-topic-dialog";
 export { ReputationBadge } from "./reputation-badge";
+export { ReportButton } from "./report-button";

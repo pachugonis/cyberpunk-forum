@@ -75,8 +75,16 @@ function SearchContent() {
   useEffect(() => {
     fetch("/api/categories")
       .then(res => res.json())
-      .then(data => setCategories(data))
-      .catch(err => console.error("Failed to load categories:", err));
+      .then(data => {
+        // API returns { categories: [...] }
+        if (data.categories && Array.isArray(data.categories)) {
+          setCategories(data.categories);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load categories:", err);
+        setCategories([]);
+      });
   }, []);
 
   useEffect(() => {

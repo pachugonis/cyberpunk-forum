@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HologramBadge } from "@/components/cyberpunk";
 import { ReactionButton } from "./reaction-button";
+import { ReportButton } from "./report-button";
 import { AttachmentList } from "./attachment-list";
 import { Reply, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -227,6 +228,10 @@ export function CommentItem({ comment, topicId, currentUserId, depth = 0 }: Comm
                   <Reply className="h-3 w-3 mr-1" />
                   {t("reply")}
                 </Button>
+              )}
+              
+              {currentUserId && currentUserId !== comment.author.id && !isDeleted && (
+                <ReportButton commentId={comment.id} size="sm" />
               )}
               
               {isAuthor && !isDeleted && !isEditing && (

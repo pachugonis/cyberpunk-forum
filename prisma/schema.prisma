@@ -27,6 +27,7 @@ model User {
   sentMessages  Message[]      @relation("SentMessages")
   receivedMessages Message[]   @relation("ReceivedMessages")
   conversations Conversation[]
+  reports       Report[]
   
   @@map("users")
 }
@@ -74,6 +75,7 @@ model Topic {
   comments    Comment[]
   reactions   Reaction[]
   attachments Attachment[]
+  reports     Report[]
   
   @@index([categoryId])
   @@index([authorId])
@@ -102,6 +104,7 @@ model Comment {
   
   reactions   Reaction[]
   attachments Attachment[]
+  reports     Report[]
   
   @@index([topicId])
   @@index([authorId])
@@ -220,4 +223,37 @@ model Attachment {
   @@index([topicId])
   @@index([commentId])
   @@map("attachments")
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  reason      String
+  description String?
+  status      ReportStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  resolvedAt  DateTime?
+  
+  reporterId  String
+  reporter    User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  
+  topicId     String?
+  topic       Topic?       @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  
+  commentId   String?
+  comment     Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  @@index([reporterId])
+  @@index([topicId])
+  @@index([commentId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("reports")
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
 }

@@ -227,5 +227,29 @@
       "topicDelete": "-15 pts for deleting a topic",
       "commentDelete": "-10 pts for deleting a comment"
     }
+  },
+  "report": {
+    "button": "Report",
+    "title": "Report Content",
+    "description": "Help us maintain a safe community by reporting inappropriate content.",
+    "reason": "Reason",
+    "selectReason": "Select a reason",
+    "additionalDetails": "Additional Details (Optional)",
+    "detailsPlaceholder": "Provide more context about this report...",
+    "submit": "Submit Report",
+    "submitting": "Submitting...",
+    "cancel": "Cancel",
+    "success": "Report submitted successfully",
+    "error": "Failed to submit report",
+    "alreadyReported": "You have already reported this content",
+    "reasons": {
+      "spam": "Spam or advertising",
+      "harassment": "Harassment or bullying",
+      "hateSpeech": "Hate speech",
+      "misinformation": "Misinformation",
+      "inappropriate": "Inappropriate content",
+      "illegal": "Illegal content",
+      "other": "Other"
+    }
   }
 }

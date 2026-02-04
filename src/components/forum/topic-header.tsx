@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { TopicActions, EditTopicDialog } from "@/components/forum";
+import { TopicActions, EditTopicDialog, ReportButton } from "@/components/forum";
 import { GlitchText, HologramBadge } from "@/components/cyberpunk";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Pin, Lock } from "lucide-react";
@@ -87,13 +87,18 @@ export function TopicHeader({ topic, currentUserId, userRole }: TopicHeaderProps
             </Link>
           </div>
           
-          <TopicActions
-            topicId={topic.id}
-            isAuthor={isAuthor}
-            isAdmin={isAdmin}
-            isModerator={isModerator}
-            onEdit={() => setEditDialogOpen(true)}
-          />
+          <div className="flex items-center gap-2">
+            {currentUserId && currentUserId !== topic.author.id && (
+              <ReportButton topicId={topic.id} />
+            )}
+            <TopicActions
+              topicId={topic.id}
+              isAuthor={isAuthor}
+              isAdmin={isAdmin}
+              isModerator={isModerator}
+              onEdit={() => setEditDialogOpen(true)}
+            />
+          </div>
         </div>
 
         {/* Title */}
