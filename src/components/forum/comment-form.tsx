@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUpload, type UploadedFile } from "./file-upload";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface CommentFormProps {
   topicId: string;
@@ -18,9 +19,10 @@ export function CommentForm({
   topicId, 
   parentId, 
   onSuccess,
-  placeholder = "Share your thoughts..." 
+  placeholder
 }: CommentFormProps) {
   const router = useRouter();
+  const t = useTranslations('comment');
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -29,7 +31,7 @@ export function CommentForm({
     e.preventDefault();
     
     if (!content.trim()) {
-      toast.error("Comment cannot be empty");
+      toast.error(t('writeComment'));
       return;
     }
 
@@ -48,16 +50,16 @@ export function CommentForm({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to post comment");
+        throw new Error(data.error || t('error'));
       }
 
       setContent("");
       setUploadedFiles([]);
-      toast.success("Comment posted");
+      toast.success(t('addComment'));
       router.refresh();
       onSuccess?.();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(error instanceof Error ? error.message : t('error'));
     } finally {
       setLoading(false);
     }
@@ -68,7 +70,7 @@ export function CommentForm({
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('writeComment')}
         className="min-h-[100px] bg-[#1a1a24] border-[#2a2a35] focus:border-[var(--cyber-cyan)] font-mono text-sm resize-none"
       />
       <FileUpload
@@ -85,7 +87,7 @@ export function CommentForm({
           disabled={loading || !content.trim()}
           className="btn-cyber text-xs"
         >
-          {loading ? "SENDING..." : "TRANSMIT"}
+          {loading ? t('submitting') : t('submit')}
         </Button>
       </div>
     </form>

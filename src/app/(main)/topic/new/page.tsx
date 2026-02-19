@@ -11,6 +11,7 @@ import { GlitchText } from "@/components/cyberpunk";
 import { FileUpload, type UploadedFile } from "@/components/forum";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from 'next-intl';
 
 interface Category {
   id: string;
@@ -23,6 +24,8 @@ function NewTopicForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedCategory = searchParams.get("category");
+  const tTopic = useTranslations('topic');
+  const tCommon = useTranslations('common');
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -84,7 +87,7 @@ function NewTopicForm() {
     <form onSubmit={handleSubmit} className="card-cyber p-6 space-y-6">
       <div className="space-y-2">
         <Label htmlFor="category" className="text-[var(--cyber-cyan)] font-mono uppercase text-xs tracking-wider">
-          Category
+          {tTopic('category')}
         </Label>
         <select
           id="category"
@@ -93,7 +96,7 @@ function NewTopicForm() {
           required
           className="w-full h-10 px-3 bg-[#1a1a24] border border-[#2a2a35] text-foreground font-mono text-sm focus:border-[var(--cyber-cyan)] focus:outline-none focus:ring-1 focus:ring-[var(--cyber-cyan)]/20 clip-cyber"
         >
-          <option value="">Select a category...</option>
+          <option value="">{tTopic('selectCategory')}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -104,7 +107,7 @@ function NewTopicForm() {
 
       <div className="space-y-2">
         <Label htmlFor="title" className="text-[var(--cyber-cyan)] font-mono uppercase text-xs tracking-wider">
-          Title
+          {tTopic('title')}
         </Label>
         <Input
           id="title"
@@ -114,13 +117,13 @@ function NewTopicForm() {
           minLength={3}
           maxLength={200}
           className="bg-[#1a1a24] border-[#2a2a35] focus:border-[var(--cyber-cyan)] font-mono"
-          placeholder="What's on your mind, choom?"
+          placeholder={tTopic('titlePlaceholder')}
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="content" className="text-[var(--cyber-cyan)] font-mono uppercase text-xs tracking-wider">
-          Content
+          {tTopic('content')}
         </Label>
         <Textarea
           id="content"
@@ -129,13 +132,13 @@ function NewTopicForm() {
           required
           minLength={10}
           className="min-h-[200px] bg-[#1a1a24] border-[#2a2a35] focus:border-[var(--cyber-cyan)] font-mono resize-none"
-          placeholder="Share your thoughts with the network..."
+          placeholder={tTopic('contentPlaceholder')}
         />
       </div>
 
       <div className="space-y-2">
         <Label className="text-[var(--cyber-cyan)] font-mono uppercase text-xs tracking-wider">
-          Attachments (Optional)
+          {tTopic('attachments')}
         </Label>
         <FileUpload
           onFileUploaded={(file) => setUploadedFiles([...uploadedFiles, file])}
@@ -149,7 +152,7 @@ function NewTopicForm() {
       <div className="flex justify-end gap-3 pt-4 border-t border-[#2a2a35]">
         <Link href="/">
           <Button type="button" variant="ghost" className="font-mono">
-            CANCEL
+            {tCommon('cancel')}
           </Button>
         </Link>
         <Button
@@ -157,7 +160,7 @@ function NewTopicForm() {
           disabled={loading}
           className="btn-cyber"
         >
-          {loading ? "TRANSMITTING..." : "PUBLISH TOPIC"}
+          {loading ? tTopic('submitting') : tTopic('submit')}
         </Button>
       </div>
     </form>
@@ -173,6 +176,9 @@ function FormLoading() {
 }
 
 export default function NewTopicPage() {
+  const tTopic = useTranslations('topic');
+  const tProfile = useTranslations('profile');
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Back button */}
@@ -181,18 +187,18 @@ export default function NewTopicPage() {
         className="inline-flex items-center text-muted-foreground hover:text-[var(--cyber-cyan)] font-mono text-sm transition-colors"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to forum
+        {tProfile('backToForum')}
       </Link>
 
       {/* Header */}
       <div className="card-cyber p-6">
         <GlitchText 
-          text="CREATE NEW TOPIC" 
+          text={tTopic('newTopicHeader')}
           as="h1"
           className="text-2xl font-bold text-[var(--cyber-cyan)] mb-2"
         />
         <p className="text-muted-foreground font-mono text-sm">
-          Start a new conversation in the network.
+          {tTopic('newTopicDescription')}
         </p>
       </div>
 

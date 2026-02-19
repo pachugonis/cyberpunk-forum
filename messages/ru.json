@@ -152,6 +152,7 @@
     "selectCategory": "Выберите категорию",
     "titlePlaceholder": "О чём вы думаете?",
     "contentPlaceholder": "Поделитесь своими мыслями...",
+    "attachments": "Вложения (необязательно)",
     "submit": "ОПУБЛИКОВАТЬ ТЕМУ",
     "submitting": "ПУБЛИКАЦИЯ...",
     "viewTopic": "Просмотр темы",
@@ -166,7 +167,16 @@
     "editedAt": "отредактировано",
     "deletedAt": "удалено",
     "backTo": "Назад к",
-    "locked": "ЗАБЛОКИРОВАНО"
+    "locked": "ЗАБЛОКИРОВАНО",
+    "newTopicHeader": "СОЗДАТЬ НОВУЮ ТЕМУ",
+    "newTopicDescription": "Начните новую беседу в сети.",
+    "statsComments": "комментариев",
+    "statsViews": "просмотров",
+    "commentsSectionTitle": "Комментарии",
+    "topicLockedMessage": "Эта тема заблокирована. Новые комментарии оставить нельзя.",
+    "loginToComment_pre": "Войдите",
+    "loginToComment_post": "чтобы присоединиться к обсуждению.",
+    "noCommentsYet": "Комментариев пока нет. Будьте первым, кто ответит."
   },
   "comment": {
     "addComment": "Добавить комментарий",
@@ -183,14 +193,18 @@
     "confirmDelete": "Вы уверены, что хотите удалить этот комментарий?",
     "editedAt": "отредактировано",
     "deletedAt": "удалено",
-    "deleted": "[удалено]"
+    "deleted": "[удалено]",
+    "error": "Не удалось отправить комментарий"
   },
   "category": {
     "topics": "тем",
     "viewCategory": "Просмотр категории",
     "createCategory": "Создать категорию",
     "editCategory": "Редактировать категорию",
-    "deleteCategory": "Удалить категорию"
+    "deleteCategory": "Удалить категорию",
+    "backToCategories": "Назад к категориям",
+    "noDescription": "Описание отсутствует",
+    "noTopicsInCategory": "В этой категории пока нет тем."
   },
   "profile": {
     "member": "Участник",
@@ -310,6 +324,23 @@
       "illegal": "Незаконный контент",
       "other": "Другое"
     }
+  },
+  "upload": {
+    "attachFiles": "ПРИКРЕПИТЬ ФАЙЛЫ",
+    "uploading": "ЗАГРУЗКА...",
+    "status": "{current}/{max} файлов • Макс {size}МБ каждый",
+    "maxFilesExceeded": "Максимум {max} файлов",
+    "fileTooLarge": "{name} превышает лимит {size}МБ",
+    "fileTypeNotAllowed": "{name} — недопустимый тип файла",
+    "uploadFailed": "Ошибка загрузки",
+    "fileUploaded": "{name} загружен",
+    "failedToUpload": "Не удалось загрузить файл",
+    "failedToDelete": "Не удалось удалить файл",
+    "fileRemoved": "Файл удалён",
+    "failedToRemove": "Не удалось удалить файл"
+  },
+  "reaction": {
+    "react": "Реагировать"
   },
   "badges": {
     "title": "Достижения и значки",

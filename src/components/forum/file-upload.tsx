@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Upload, File, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface FileUploadProps {
   onFileUploaded: (file: UploadedFile) => void;
@@ -63,25 +64,39 @@ export function FileUpload({
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations('upload');
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
 
     if (uploadedFiles.length + files.length > maxFiles) {
-      toast.error(`Maximum ${maxFiles} files allowed`);
+      toast.error(
+        t('maxFilesExceeded', {
+          max: maxFiles,
+        })
+      );
       return;
     }
 
     for (const file of files) {
       // Validate file size
       if (file.size > MAX_FILE_SIZE) {
-        toast.error(`${file.name} exceeds ${maxSize}MB limit`);
+        toast.error(
+          t('fileTooLarge', {
+            name: file.name,
+            size: maxSize,
+          })
+        );
         continue;
       }
 
       // Validate MIME type
       if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-        toast.error(`${file.name} - File type not allowed`);
+        toast.error(
+          t('fileTypeNotAllowed', {
+            name: file.name,
+          })
+        );
         continue;
       }
 
@@ -98,15 +113,19 @@ export function FileUpload({
 
         if (!response.ok) {
           const data = await response.json();
-          throw new Error(data.error || "Upload failed");
+          throw new Error(data.error || t('uploadFailed'));
         }
 
         const uploadedFile = await response.json();
         onFileUploaded(uploadedFile);
-        toast.success(`${file.name} uploaded`);
+        toast.success(
+          t('fileUploaded', {
+            name: file.name,
+          })
+        );
       } catch (error) {
         toast.error(
-          error instanceof Error ? error.message : "Failed to upload file"
+          error instanceof Error ? error.message : t('failedToUpload')
         );
       } finally {
         setUploading(false);
@@ -126,13 +145,13 @@ export function FileUpload({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete file");
+        throw new Error(t('failedToDelete'));
       }
 
       onFileRemoved(file.id);
-      toast.success("File removed");
+      toast.success(t('fileRemoved'));
     } catch (error) {
-      toast.error("Failed to remove file");
+      toast.error(t('failedToRemove'));
     }
   };
 
@@ -156,10 +175,14 @@ export function FileUpload({
           className="border-[#2a2a35] hover:border-[var(--cyber-cyan)] text-[var(--cyber-cyan)] font-mono text-xs"
         >
           <Upload className="w-4 h-4 mr-2" />
-          {uploading ? "UPLOADING..." : "ATTACH FILES"}
+          {uploading ? t('uploading') : t('attachFiles')}
         </Button>
         <span className="text-xs text-gray-500 font-mono">
-          {uploadedFiles.length}/{maxFiles} files • Max {maxSize}MB each
+          {t('status', {
+            current: uploadedFiles.length,
+            max: maxFiles,
+            size: maxSize,
+          })}
         </span>
       </div>
 

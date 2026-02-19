@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Heart, Flame, Zap, Cpu, Code } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ReactionButtonProps {
   targetId: string;
@@ -35,6 +36,7 @@ export function ReactionButton({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const t = useTranslations('reaction');
 
   const reactionCounts = reactions.reduce((acc, r) => {
     acc[r.type] = (acc[r.type] || 0) + 1;
@@ -88,11 +90,16 @@ export function ReactionButton({
         disabled={loading}
       >
         <Zap className="h-3 w-3" />
-        <span>{totalReactions || "React"}</span>
+        <span>{totalReactions || t('react')}</span>
       </Button>
 
       {showPicker && (
-        <div className="absolute bottom-full left-0 mb-2 bg-[#13131a] border border-[#2a2a35] p-2 clip-cyber flex gap-1 z-50">
+        <div
+          className={cn(
+            "absolute left-0 bg-[#13131a] border border-[#2a2a35] p-2 clip-cyber flex gap-1 z-50",
+            targetType === "topic" ? "top-full mt-2" : "bottom-full mb-2"
+          )}
+        >
           {(Object.keys(reactionConfig) as ReactionType[]).map((type) => {
             const config = reactionConfig[type];
             const Icon = config.icon;

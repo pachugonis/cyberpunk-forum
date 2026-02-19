@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { CommentItem, CommentForm, ReactionButton, AttachmentList, TopicHeader } from "@/components/forum";
 import { Eye, MessageSquare } from "lucide-react";
+import { getTranslations } from 'next-intl/server';
 
 interface TopicPageProps {
   params: Promise<{ id: string }>;
@@ -108,9 +109,10 @@ export const revalidate = 30; // Revalidate every 30 seconds for more fresh comm
 
 export default async function TopicPage({ params }: TopicPageProps) {
   const { id } = await params;
-  const [topic, session] = await Promise.all([
+  const [topic, session, tTopic] = await Promise.all([
     getTopic(id).catch(() => null),
     auth(),
+    getTranslations('topic'),
   ]);
 
   if (!topic) {
@@ -138,7 +140,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
       )}
 
       {/* Stats and reactions */}
-      <div className="card-cyber p-6">
+      <div className="bg-[#13131a] border border-[#2a2a35] p-6">
         <div className="flex items-center gap-4">
           <ReactionButton
             targetId={topic.id}
@@ -148,11 +150,11 @@ export default async function TopicPage({ params }: TopicPageProps) {
           />
           <div className="flex items-center gap-1 text-xs font-mono text-muted-foreground">
             <MessageSquare className="h-4 w-4" />
-            <span>{topic._count.comments} comments</span>
+            <span>{topic._count.comments} {tTopic('statsComments')}</span>
           </div>
           <div className="flex items-center gap-1 text-xs font-mono text-muted-foreground">
             <Eye className="h-4 w-4" />
-            <span>{topic.viewCount} views</span>
+            <span>{topic.viewCount} {tTopic('statsViews')}</span>
           </div>
         </div>
       </div>
@@ -160,7 +162,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
       {/* Comments section */}
       <section className="space-y-4">
         <h2 className="text-lg font-bold text-[var(--cyber-magenta)] font-mono uppercase tracking-wider">
-          // Comments ({topic._count.comments})
+          {tTopic('commentsSectionTitle')} ({topic._count.comments})
         </h2>
 
         {/* Comment form */}
@@ -171,16 +173,17 @@ export default async function TopicPage({ params }: TopicPageProps) {
         ) : topic.isLocked ? (
           <div className="card-cyber p-4 text-center">
             <p className="text-muted-foreground font-mono text-sm">
-              This topic is locked. No new comments can be added.
+              {tTopic('topicLockedMessage')}
             </p>
           </div>
         ) : (
           <div className="card-cyber p-4 text-center">
             <p className="text-muted-foreground font-mono text-sm">
               <Link href="/login" className="text-[var(--cyber-cyan)] hover:underline">
-                Jack in
+                {tTopic('loginToComment_pre')}
               </Link>
-              {" "}to join the conversation.
+              {" "}
+              {tTopic('loginToComment_post')}
             </p>
           </div>
         )}
@@ -200,7 +203,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
         {topic.comments.length === 0 && (
           <div className="card-cyber p-8 text-center">
             <p className="text-muted-foreground font-mono">
-              No comments yet. Be the first to respond.
+              {tTopic('noCommentsYet')}
             </p>
           </div>
         )}

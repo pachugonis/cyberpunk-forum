@@ -5,6 +5,7 @@ import { GlitchText } from "@/components/cyberpunk";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus, ArrowLeft } from "lucide-react";
+import { getTranslations } from 'next-intl/server';
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -50,7 +51,11 @@ export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const category = await getCategory(slug);
+  const [category, tCategory, tHome] = await Promise.all([
+    getCategory(slug),
+    getTranslations('category'),
+    getTranslations('home'),
+  ]);
 
   if (!category) {
     notFound();
@@ -61,7 +66,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       {/* Back button */}
       <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-[var(--cyber-cyan)] font-mono text-sm transition-colors">
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to categories
+        {tCategory('backToCategories')}
       </Link>
 
       {/* Header */}
@@ -75,16 +80,16 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               style={{ color: category.color || "var(--cyber-cyan)" } as React.CSSProperties}
             />
             <p className="text-muted-foreground font-mono text-sm mb-2">
-              {category.description || "No description"}
+              {category.description || tCategory('noDescription')}
             </p>
             <p className="text-xs font-mono text-muted-foreground">
-              {category._count.topics} topics
+              {category._count.topics} {tCategory('topics')}
             </p>
           </div>
           <Link href={`/topic/new?category=${category.id}`}>
             <Button className="btn-cyber shrink-0">
               <Plus className="h-4 w-4 mr-2" />
-              NEW TOPIC
+              {tHome('newTopic')}
             </Button>
           </Link>
         </div>
@@ -100,12 +105,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       {category.topics.length === 0 && (
         <div className="card-cyber p-8 text-center">
           <p className="text-muted-foreground font-mono mb-4">
-            No topics in this category yet.
+            {tCategory('noTopicsInCategory')}
           </p>
           <Link href={`/topic/new?category=${category.id}`}>
             <Button className="btn-cyber">
               <Plus className="h-4 w-4 mr-2" />
-              CREATE FIRST TOPIC
+              {tHome('createFirstTopic')}
             </Button>
           </Link>
         </div>
