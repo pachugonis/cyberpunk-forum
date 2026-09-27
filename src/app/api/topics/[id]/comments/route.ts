@@ -5,6 +5,9 @@ import { createNotification } from "@/lib/notifications";
 import { awardCommentCreationReputation } from "@/lib/reputation";
 import { z } from "zod";
 
+// Keep in sync with maxDepth in components/forum/comment-item.tsx
+const MAX_REPLY_DEPTH = 3;
+
 const commentSchema = z.object({
   content: z.string().min(1, "Comment cannot be empty").max(5000),
   parentId: z.string().optional(),
@@ -31,7 +34,7 @@ export async function POST(
       where: { id: topicId },
     });
 
-    if (!topic) {
+    if (!topic || topic.deletedAt) {
       return NextResponse.json(
         { error: "Topic not found" },
         { status: 404 }
@@ -57,10 +60,29 @@ export async function POST(
         },
       });
 
-      if (!parentComment || parentComment.topicId !== topicId) {
+      if (!parentComment || parentComment.topicId !== topicId || parentComment.deletedAt) {
         return NextResponse.json(
           { error: "Parent comment not found" },
           { status: 404 }
+        );
+      }
+
+      // Match the UI nesting limit: replies may go at most MAX_REPLY_DEPTH levels deep
+      let parentDepth = 0;
+      let ancestorId = parentComment.parentId;
+      while (ancestorId && parentDepth < MAX_REPLY_DEPTH) {
+        parentDepth++;
+        const ancestor = await prisma.comment.findUnique({
+          where: { id: ancestorId },
+          select: { parentId: true },
+        });
+        ancestorId = ancestor?.parentId ?? null;
+      }
+
+      if (parentDepth >= MAX_REPLY_DEPTH) {
+        return NextResponse.json(
+          { error: "Maximum reply depth reached" },
+          { status: 400 }
         );
       }
     }

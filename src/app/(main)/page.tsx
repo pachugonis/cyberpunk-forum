@@ -53,9 +53,10 @@ export const revalidate = 60; // Revalidate every 60 seconds
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: { sort?: string };
+  searchParams: Promise<{ sort?: string }>;
 }) {
-  const { categories, recentTopics } = await getHomeData(searchParams.sort);
+  const { sort } = await searchParams;
+  const { categories, recentTopics } = await getHomeData(sort);
   const t = await getTranslations('home');
 
   return (

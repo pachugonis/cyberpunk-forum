@@ -17,9 +17,8 @@ export async function GET(
   try {
     const { id } = await params;
     
-    const topic = await prisma.topic.update({
-      where: { id },
-      data: { viewCount: { increment: 1 } },
+    const topic = await prisma.topic.findFirst({
+      where: { id, deletedAt: null },
       include: {
         author: {
           select: { id: true, name: true, image: true, role: true, bio: true },

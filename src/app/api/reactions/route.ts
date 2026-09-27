@@ -9,6 +9,7 @@ import {
   removeCommentReactionReputation,
 } from "@/lib/reputation";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 const reactionSchema = z.object({
   type: z.enum(["LIKE", "LOVE", "FIRE", "CYBER", "HACK"]),
@@ -30,74 +31,69 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { type, targetId, targetType } = reactionSchema.parse(body);
 
-    const existingReaction = await prisma.reaction.findFirst({
-      where: {
-        userId: session.user.id,
-        type,
-        ...(targetType === "topic" ? { topicId: targetId } : { commentId: targetId }),
-      },
-    });
+    const userId = session.user.id;
+    const targetWhere = targetType === "topic" ? { topicId: targetId } : { commentId: targetId };
 
-    if (existingReaction) {
-      await prisma.reaction.delete({
-        where: { id: existingReaction.id },
-      });
-
-      // Get the target to remove reputation
-      if (targetType === "topic") {
-        const topic = await prisma.topic.findUnique({
-          where: { id: targetId },
-          select: { authorId: true },
-        });
-        if (topic) {
-          await removeTopicReactionReputation(topic.authorId);
-        }
-      } else {
-        const comment = await prisma.comment.findUnique({
-          where: { id: targetId },
-          select: { authorId: true },
-        });
-        if (comment) {
-          await removeCommentReactionReputation(comment.authorId);
-        }
-      }
-
-      return NextResponse.json({ action: "removed" });
-    }
-
-    // Get the target (topic or comment) to find the author
-    let targetAuthorId: string | null = null;
+    // Resolve the target first: reacting to missing or deleted content is not allowed
+    let targetAuthorId: string;
     let targetTitle = "";
-    
+
     if (targetType === "topic") {
       const topic = await prisma.topic.findUnique({
         where: { id: targetId },
-        select: { authorId: true, title: true },
+        select: { authorId: true, title: true, deletedAt: true },
       });
-      if (topic) {
-        targetAuthorId = topic.authorId;
-        targetTitle = topic.title;
+      if (!topic || topic.deletedAt) {
+        return NextResponse.json({ error: "Topic not found" }, { status: 404 });
       }
+      targetAuthorId = topic.authorId;
+      targetTitle = topic.title;
     } else {
       const comment = await prisma.comment.findUnique({
         where: { id: targetId },
-        select: { authorId: true, topicId: true },
+        select: { authorId: true, deletedAt: true },
       });
-      if (comment) {
-        targetAuthorId = comment.authorId;
+      if (!comment || comment.deletedAt) {
+        return NextResponse.json({ error: "Comment not found" }, { status: 404 });
       }
+      targetAuthorId = comment.authorId;
     }
 
-    await prisma.reaction.create({
-      data: {
-        type,
-        userId: session.user.id,
-        ...(targetType === "topic" ? { topicId: targetId } : { commentId: targetId }),
-      },
+    // Reacting to your own content earns no reputation and sends no notification
+    const isOwnContent = targetAuthorId === userId;
+
+    // Toggle off: deleteMany is atomic, so concurrent requests can't both remove it
+    const removed = await prisma.reaction.deleteMany({
+      where: { userId, type, ...targetWhere },
     });
 
-    // Create notification for the author
-    if (targetAuthorId) {
+    if (removed.count > 0) {
+      if (!isOwnContent) {
+        if (targetType === "topic") {
+          await removeTopicReactionReputation(targetAuthorId);
+        } else {
+          await removeCommentReactionReputation(targetAuthorId);
+        }
+      }
+      return NextResponse.json({ action: "removed" });
+    }
+
+    try {
+      await prisma.reaction.create({
+        data: { type, userId, ...targetWhere },
+      });
+    } catch (error) {
+      // A concurrent request already added the same reaction
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        return NextResponse.json({ action: "added" }, { status: 201 });
+      }
+      throw error;
+    }
+
+    if (!isOwnContent) {
       const notificationType = targetType === "topic" ? "REACTION_ON_TOPIC" : "REACTION_ON_COMMENT";
       const content = targetType === "topic"
         ? `${session.user.name || "Someone"} reacted ${type} to your topic "${targetTitle}"`
@@ -107,7 +103,7 @@ export async function POST(request: Request) {
         userId: targetAuthorId,
         type: notificationType,
         content,
-        actorId: session.user.id,
+        actorId: userId,
         actorName: session.user.name || "Anonymous",
         topicId: targetType === "topic" ? targetId : undefined,
         commentId: targetType === "comment" ? targetId : undefined,

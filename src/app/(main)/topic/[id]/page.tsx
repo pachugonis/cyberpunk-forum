@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -10,99 +11,64 @@ interface TopicPageProps {
   params: Promise<{ id: string }>;
 }
 
-async function getTopic(id: string) {
-  const topic = await prisma.topic.update({
-    where: { id },
-    data: { viewCount: { increment: 1 } },
-    include: {
-      author: {
-        select: { id: true, name: true, image: true, role: true, bio: true },
-      },
-      category: true,
-      attachments: {
-        select: {
-          id: true,
-          filename: true,
-          originalName: true,
-          mimeType: true,
-          size: true,
-          url: true,
-        },
-      },
-      reactions: {
-        select: { type: true, userId: true },
-      },
-      comments: {
-        where: { parentId: null },
-        include: {
-          author: {
-            select: { id: true, name: true, image: true, role: true },
-          },
-          attachments: {
-            select: {
-              id: true,
-              filename: true,
-              originalName: true,
-              mimeType: true,
-              size: true,
-              url: true,
-            },
-          },
-          reactions: {
-            select: { type: true, userId: true },
-          },
-          replies: {
-            include: {
-              author: {
-                select: { id: true, name: true, image: true, role: true },
-              },
-              attachments: {
-                select: {
-                  id: true,
-                  filename: true,
-                  originalName: true,
-                  mimeType: true,
-                  size: true,
-                  url: true,
-                },
-              },
-              reactions: {
-                select: { type: true, userId: true },
-              },
-              replies: {
-                include: {
-                  author: {
-                    select: { id: true, name: true, image: true, role: true },
-                  },
-                  attachments: {
-                    select: {
-                      id: true,
-                      filename: true,
-                      originalName: true,
-                      mimeType: true,
-                      size: true,
-                      url: true,
-                    },
-                  },
-                  reactions: {
-                    select: { type: true, userId: true },
-                  },
-                },
-                orderBy: { createdAt: "asc" },
-              },
-            },
-            orderBy: { createdAt: "asc" },
-          },
-        },
-        orderBy: { createdAt: "asc" },
-      },
-      _count: {
-        select: { comments: true },
-      },
-    },
-  });
+const attachmentSelect = {
+  id: true,
+  filename: true,
+  originalName: true,
+  mimeType: true,
+  size: true,
+  url: true,
+} as const;
 
-  return topic;
+async function getTopic(id: string) {
+  const [topic, comments] = await Promise.all([
+    prisma.topic.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: { id: true, name: true, image: true, role: true, bio: true },
+        },
+        category: true,
+        attachments: { select: attachmentSelect },
+        reactions: {
+          select: { type: true, userId: true },
+        },
+        _count: {
+          select: { comments: true },
+        },
+      },
+    }),
+    // Load every comment in one flat query and build the reply tree in memory,
+    // so replies of any depth are shown
+    prisma.comment.findMany({
+      where: { topicId: id },
+      include: {
+        author: {
+          select: { id: true, name: true, image: true, role: true },
+        },
+        attachments: { select: attachmentSelect },
+        reactions: {
+          select: { type: true, userId: true },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
+
+  if (!topic) return null;
+
+  type CommentNode = (typeof comments)[number] & { replies: CommentNode[] };
+  const nodes = new Map<string, CommentNode>(
+    comments.map((c) => [c.id, { ...c, replies: [] }])
+  );
+  const rootComments: CommentNode[] = [];
+  for (const node of nodes.values()) {
+    const parent = node.parentId ? nodes.get(node.parentId) : undefined;
+    if (parent) parent.replies.push(node);
+    else rootComments.push(node);
+  }
+
+  return { ...topic, comments: rootComments };
 }
 
 export const revalidate = 30; // Revalidate every 30 seconds for more fresh comments
@@ -115,14 +81,16 @@ export default async function TopicPage({ params }: TopicPageProps) {
     getTranslations('topic'),
   ]);
 
-  if (!topic) {
+  if (!topic || topic.deletedAt) {
     notFound();
   }
 
-  // If topic is deleted, return 404
-  if (topic.deletedAt) {
-    notFound();
-  }
+  // Count the view after the response is sent, outside of rendering
+  after(() =>
+    prisma.topic
+      .updateMany({ where: { id }, data: { viewCount: { increment: 1 } } })
+      .catch((error) => console.error("Error incrementing view count:", error))
+  );
 
   return (
     <div className="space-y-6">
