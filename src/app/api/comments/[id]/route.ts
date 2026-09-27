@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { deductCommentDeletionReputation } from "@/lib/reputation";
 import { z } from "zod";
+import { uploadPath } from "@/lib/uploads";
 
 const updateCommentSchema = z.object({
   content: z.string().min(1, "Comment cannot be empty").max(5000),
@@ -164,17 +165,15 @@ export async function DELETE(
     // Delete attachments from disk if any
     if (comment.attachments && comment.attachments.length > 0) {
       const { unlink } = await import("fs/promises");
-      const { join } = await import("path");
-      const { existsSync } = await import("fs");
 
       for (const attachment of comment.attachments) {
-        const filepath = join(process.cwd(), "public", "uploads", attachment.filename);
-        if (existsSync(filepath)) {
-          try {
-            await unlink(filepath);
-          } catch (error) {
-            console.error(`Failed to delete file ${attachment.filename}:`, error);
-          }
+        const filepath = uploadPath(attachment.filename);
+        if (filepath) {
+          await unlink(filepath).catch((error) => {
+            if (error.code !== "ENOENT") {
+              console.error(`Failed to delete file ${attachment.filename}:`, error);
+            }
+          });
         }
       }
 

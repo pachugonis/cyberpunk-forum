@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
 import { unlink } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { prisma } from '../src/lib/prisma';
+import { uploadPath } from '../src/lib/uploads';
 
-const prisma = new PrismaClient();
+// Uploads are orphaned until the topic/comment is submitted, so leave recent ones alone
+const MIN_AGE_MS = 24 * 60 * 60 * 1000;
 
 async function cleanupOrphanedAttachments() {
   try {
@@ -15,6 +15,7 @@ async function cleanupOrphanedAttachments() {
         AND: [
           { topicId: null },
           { commentId: null },
+          { createdAt: { lt: new Date(Date.now() - MIN_AGE_MS) } },
         ],
       },
     });
@@ -29,13 +30,15 @@ async function cleanupOrphanedAttachments() {
     // Delete files and database records
     for (const attachment of orphanedAttachments) {
       // Delete file from disk
-      const filepath = join(process.cwd(), 'public', 'uploads', attachment.filename);
-      if (existsSync(filepath)) {
+      const filepath = uploadPath(attachment.filename);
+      if (filepath) {
         try {
           await unlink(filepath);
           console.log(`Deleted file: ${attachment.filename}`);
         } catch (error) {
-          console.error(`Failed to delete file ${attachment.filename}:`, error);
+          if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+            console.error(`Failed to delete file ${attachment.filename}:`, error);
+          }
         }
       }
 
