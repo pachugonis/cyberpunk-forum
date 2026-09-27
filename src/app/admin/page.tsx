@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { GlitchText, CyberCard } from "@/components/cyberpunk";
 import { Users, FileText, MessageSquare, FolderTree, Flag } from "lucide-react";
@@ -67,24 +68,24 @@ export default async function AdminDashboard() {
       {/* Quick actions */}
       <CyberCard className="p-6">
         <h2 className="text-lg font-bold text-[var(--cyber-cyan)] font-mono uppercase tracking-wider mb-4">
-          // Quick Actions
+          {"// Quick Actions"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <a
+          <Link
             href="/admin/categories"
             className="p-4 bg-[#1a1a24] hover:bg-[#2a2a35] transition-colors clip-cyber text-center"
           >
             <FolderTree className="h-8 w-8 mx-auto mb-2 text-[var(--cyber-magenta)]" />
             <p className="font-mono text-sm">{t('manageCategories')}</p>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/admin/users"
             className="p-4 bg-[#1a1a24] hover:bg-[#2a2a35] transition-colors clip-cyber text-center"
           >
             <Users className="h-8 w-8 mx-auto mb-2 text-[var(--cyber-cyan)]" />
             <p className="font-mono text-sm">{t('manageUsers')}</p>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/admin/reports"
             className="p-4 bg-[#1a1a24] hover:bg-[#2a2a35] transition-colors clip-cyber text-center relative"
           >
@@ -95,14 +96,14 @@ export default async function AdminDashboard() {
                 {stats.reportCount}
               </span>
             )}
-          </a>
-          <a
+          </Link>
+          <Link
             href="/"
             className="p-4 bg-[#1a1a24] hover:bg-[#2a2a35] transition-colors clip-cyber text-center"
           >
             <FileText className="h-8 w-8 mx-auto mb-2 text-[var(--cyber-yellow)]" />
             <p className="font-mono text-sm">{t('viewForum')}</p>
-          </a>
+          </Link>
         </div>
       </CyberCard>
     </div>

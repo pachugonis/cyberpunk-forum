@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export function proxy(request: NextRequest) {
+export function proxy() {
   // Pass through to the next proxy/handler
   return NextResponse.next();
 }

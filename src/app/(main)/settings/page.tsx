@@ -99,9 +99,9 @@ export default function SettingsPage() {
       setVerificationCode("");
       setQrCode("");
       setSecret("");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error verifying 2FA:", error);
-      toast.error(error.message || t2fa("invalidCode"));
+      toast.error((error instanceof Error && error.message) || t2fa("invalidCode"));
     } finally {
       setLoading(false);
     }
@@ -128,9 +128,9 @@ export default function SettingsPage() {
       toast.success(t2fa("disableSuccess"));
       setTwoFactorEnabled(false);
       setDisableCode("");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error disabling 2FA:", error);
-      toast.error(error.message || t2fa("invalidCode"));
+      toast.error((error instanceof Error && error.message) || t2fa("invalidCode"));
     } finally {
       setLoading(false);
     }

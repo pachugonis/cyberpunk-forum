@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { CategoryCard, TopicCard } from "@/components/forum";
 import { GlitchText } from "@/components/cyberpunk";
 import { Button } from "@/components/ui/button";
-import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import Link from "next/link";
 import { Plus } from "lucide-react";

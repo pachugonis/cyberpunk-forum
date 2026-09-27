@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useEffectEvent, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { TopicCard } from "@/components/forum";
@@ -44,10 +44,6 @@ interface Category {
   slug: string;
 }
 
-interface User {
-  id: string;
-  name: string | null;
-}
 
 function SearchContent() {
   const router = useRouter();
@@ -87,9 +83,14 @@ function SearchContent() {
       });
   }, []);
 
+  // Search whenever the ?q= param changes; uses the latest filter values
+  const onQueryParamChange = useEffectEvent((q: string) => {
+    handleSearch(q);
+  });
+
   useEffect(() => {
     if (initialQuery) {
-      handleSearch(initialQuery);
+      onQueryParamChange(initialQuery);
     }
   }, [initialQuery]);
 
@@ -126,9 +127,13 @@ function SearchContent() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query)}`);
+    if (!query.trim()) return;
+    if (query === initialQuery) {
+      // URL won't change, so the effect won't fire: search directly
       handleSearch(query);
+    } else {
+      // Changing ?q= triggers the search effect
+      router.push(`/search?q=${encodeURIComponent(query)}`);
     }
   };
 

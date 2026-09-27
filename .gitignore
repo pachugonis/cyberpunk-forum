@@ -48,3 +48,5 @@ next-env.d.ts
 # local SQLite databases (contain user data and password hashes)
 *.db
 *.db-journal
+*.db-wal
+*.db-shm

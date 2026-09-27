@@ -663,8 +663,8 @@ BACKUP_FILE="$BACKUP_DIR/cyberforum_backup_$DATE.db"
 # Create backup directory
 mkdir -p $BACKUP_DIR
 
-# Backup database
-cp $DB_FILE $BACKUP_FILE
+# Backup database (safe while the app is running in WAL mode; plain cp is not)
+sqlite3 $DB_FILE ".backup '$BACKUP_FILE'"
 
 # Compress backup
 gzip $BACKUP_FILE

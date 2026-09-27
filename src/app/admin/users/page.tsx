@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { GlitchText, CyberCard, HologramBadge } from "@/components/cyberpunk";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 interface User {

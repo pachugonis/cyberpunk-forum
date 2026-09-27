@@ -150,7 +150,7 @@ export function FileUpload({
 
       onFileRemoved(file.id);
       toast.success(t('fileRemoved'));
-    } catch (error) {
+    } catch {
       toast.error(t('failedToRemove'));
     }
   };

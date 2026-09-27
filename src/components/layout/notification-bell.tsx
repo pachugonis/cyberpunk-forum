@@ -4,14 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { Bell, Check, Trash2, MessageSquare, Heart, Flame, Mail } from "lucide-react";
+import { Bell, Check, Trash2, MessageSquare, Heart, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 

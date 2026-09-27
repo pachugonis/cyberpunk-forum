@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale } from 'next-intl';
-import { useTransition, useState, useEffect } from 'react';
+import { useTransition, useSyncExternalStore } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,11 +18,12 @@ const languages = [
 export function LanguageSwitcher() {
   const locale = useLocale();
   const [isPending, startTransition] = useTransition();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // false during SSR and hydration, true on the client afterwards
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   const changeLanguage = (newLocale: string) => {
     startTransition(() => {
