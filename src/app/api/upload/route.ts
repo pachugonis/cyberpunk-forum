@@ -3,23 +3,57 @@ import { auth } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
+import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
-const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "text/plain",
-  "application/zip",
-  "application/x-rar-compressed",
-];
+
+// Extension -> MIME type. The stored extension and MIME type always come
+// from this table, never from the client, so nothing can be served as HTML/SVG.
+const ALLOWED_TYPES: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  webp: "image/webp",
+  pdf: "application/pdf",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  txt: "text/plain",
+  zip: "application/zip",
+  rar: "application/x-rar-compressed",
+};
+
+const OLE_SIGNATURE = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
+const ZIP_SIGNATURE = [0x50, 0x4b, 0x03, 0x04];
+
+// Magic bytes each extension must start with
+const SIGNATURES: Record<string, number[][]> = {
+  jpg: [[0xff, 0xd8, 0xff]],
+  jpeg: [[0xff, 0xd8, 0xff]],
+  png: [[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]],
+  gif: [[0x47, 0x49, 0x46, 0x38]],
+  webp: [[0x52, 0x49, 0x46, 0x46]],
+  pdf: [[0x25, 0x50, 0x44, 0x46, 0x2d]],
+  doc: [OLE_SIGNATURE],
+  xls: [OLE_SIGNATURE],
+  docx: [ZIP_SIGNATURE],
+  xlsx: [ZIP_SIGNATURE],
+  zip: [ZIP_SIGNATURE, [0x50, 0x4b, 0x05, 0x06]],
+  rar: [[0x52, 0x61, 0x72, 0x21, 0x1a, 0x07]],
+};
+
+function matchesSignature(buffer: Buffer, extension: string): boolean {
+  if (extension === "txt") {
+    // Plain text: reject anything that looks like markup
+    const head = buffer.subarray(0, 1024).toString("utf8").trimStart().toLowerCase();
+    return !buffer.includes(0) && !head.startsWith("<");
+  }
+  const signatures = SIGNATURES[extension];
+  return signatures.some((sig) => sig.every((byte, i) => buffer[i] === byte));
+}
 
 export async function POST(request: Request) {
   try {
@@ -50,8 +84,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate MIME type
-    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    // Validate file type by extension and file contents
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const mimeType = ALLOWED_TYPES[extension];
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    if (!mimeType || !matchesSignature(buffer, extension)) {
       return NextResponse.json(
         { error: "File type not allowed" },
         { status: 400 }
@@ -59,10 +98,7 @@ export async function POST(request: Request) {
     }
 
     // Generate unique filename
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(7);
-    const extension = file.name.split(".").pop();
-    const filename = `${timestamp}-${randomString}.${extension}`;
+    const filename = `${Date.now()}-${randomUUID()}.${extension}`;
 
     // Create uploads directory if it doesn't exist
     const uploadsDir = join(process.cwd(), "public", "uploads");
@@ -71,8 +107,6 @@ export async function POST(request: Request) {
     }
 
     // Write file to disk
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
     const filepath = join(uploadsDir, filename);
     await writeFile(filepath, buffer);
 
@@ -81,7 +115,7 @@ export async function POST(request: Request) {
       data: {
         filename,
         originalName: file.name,
-        mimeType: file.type,
+        mimeType,
         size: file.size,
         url: `/uploads/${filename}`,
       },

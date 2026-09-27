@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { verifyTwoFactorToken } from "./two-factor";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -10,6 +11,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        token: { label: "2FA code", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -26,6 +28,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             role: true,
             password: true,
             twoFactorEnabled: true,
+            twoFactorSecret: true,
           },
         });
 
@@ -40,6 +43,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!passwordMatch) {
           return null;
+        }
+
+        // 2FA must be enforced here, not only in the login UI
+        if (user.twoFactorEnabled) {
+          const token = credentials.token as string | undefined;
+          if (
+            !token ||
+            !user.twoFactorSecret ||
+            !verifyTwoFactorToken(token, user.twoFactorSecret)
+          ) {
+            return null;
+          }
         }
 
         return {

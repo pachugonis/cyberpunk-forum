@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import bcrypt from "bcryptjs";
 import path from "path";
+import { randomBytes } from "crypto";
 
 const adapter = new PrismaLibSql({
   url: `file:${path.join(process.cwd(), "prisma", "dev.db")}`,
@@ -9,11 +10,20 @@ const adapter = new PrismaLibSql({
 
 const prisma = new PrismaClient({ adapter });
 
+// Never ship well-known default passwords: take them from env or generate one
+function seedPassword(envVar: string, label: string): string {
+  const fromEnv = process.env[envVar];
+  if (fromEnv) return fromEnv;
+  const generated = randomBytes(12).toString("base64url");
+  console.log(`Generated ${label} password (set ${envVar} to choose one): ${generated}`);
+  return generated;
+}
+
 async function main() {
   console.log("Seeding database...");
 
   // Create admin user
-  const adminPassword = await bcrypt.hash("admin123", 12);
+  const adminPassword = await bcrypt.hash(seedPassword("SEED_ADMIN_PASSWORD", "admin"), 12);
   const admin = await prisma.user.upsert({
     where: { email: "admin@nightcity.com" },
     update: {},
@@ -28,7 +38,7 @@ async function main() {
   console.log("Created admin user:", admin.email);
 
   // Create test user
-  const userPassword = await bcrypt.hash("user123", 12);
+  const userPassword = await bcrypt.hash(seedPassword("SEED_USER_PASSWORD", "test user"), 12);
   const user = await prisma.user.upsert({
     where: { email: "v@nightcity.com" },
     update: {},

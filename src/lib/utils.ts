@@ -16,7 +16,7 @@ export function generateRecoveryCode(): string {
   
   const code = Array.from({ length: segments }, () => {
     return Array.from({ length: segmentLength }, () => 
-      chars.charAt(Math.floor(Math.random() * chars.length))
+      chars.charAt(crypto.getRandomValues(new Uint32Array(1))[0] % chars.length)
     ).join('');
   });
   

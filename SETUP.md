@@ -189,7 +189,7 @@ Add the following configuration:
 DATABASE_URL="file:./prisma/production.db"
 
 # NextAuth
-AUTH_SECRET="zlF3C5HctiXFJiL0jFmKvGhxbxQr1gjNj9ySpTE1jdc="
+AUTH_SECRET="<output of: openssl rand -base64 32>"
 NEXTAUTH_URL="https://vorthex.net"
 
 # Node Environment
@@ -224,10 +224,11 @@ npx prisma generate
 npx prisma db push
 ```
 
-Seed the database with initial data:
+Seed the database with initial data. Choose the admin password via env
+(otherwise a random one is generated and printed once):
 
 ```bash
-npm run db:seed
+SEED_ADMIN_PASSWORD='<strong password>' npm run db:seed
 ```
 
 ### 5. Build the Application
@@ -479,7 +480,10 @@ server {
     location /uploads {
         alias /var/www/cyberpunk-forum/public/uploads;
         expires 30d;
+        # add_header here replaces server-level headers, so repeat them
         add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Content-Security-Policy "default-src 'none'; sandbox" always;
     }
 
     # Next.js API routes

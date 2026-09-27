@@ -44,3 +44,7 @@ next-env.d.ts
 
 # uploads
 /public/uploads
+
+# local SQLite databases (contain user data and password hashes)
+*.db
+*.db-journal

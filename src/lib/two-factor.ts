@@ -1,5 +1,6 @@
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
+import { randomInt } from "crypto";
 
 /**
  * Generate a new two-factor authentication secret
@@ -38,7 +39,7 @@ export function verifyTwoFactorToken(token: string, secret: string): boolean {
     secret: secret,
     encoding: "base32",
     token: token,
-    window: 2, // Allow 2 time steps before and after current time
+    window: 1, // Allow 1 time step before and after current time
   });
 }
 
@@ -49,7 +50,7 @@ export function generateBackupCodes(count: number = 8): string[] {
   const codes: string[] = [];
   for (let i = 0; i < count; i++) {
     const code = Array.from({ length: 8 }, () =>
-      Math.floor(Math.random() * 10)
+      randomInt(10)
     ).join("");
     codes.push(code);
   }
