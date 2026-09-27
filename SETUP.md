@@ -186,7 +186,8 @@ Add the following configuration:
 
 ```env
 # Database
-DATABASE_URL="file:./prisma/production.db"
+# Relative to the prisma/ directory, i.e. prisma/dev.db
+DATABASE_URL="file:./dev.db"
 
 # NextAuth
 AUTH_SECRET="<output of: openssl rand -base64 32>"
@@ -217,11 +218,11 @@ mkdir -p public/uploads
 chmod 755 public/uploads
 ```
 
-Generate Prisma client and push database schema:
+Generate Prisma client and apply database migrations:
 
 ```bash
 npx prisma generate
-npx prisma db push
+npx prisma migrate deploy
 ```
 
 Seed the database with initial data. Choose the admin password via env
@@ -656,7 +657,7 @@ Add:
 
 # Configuration
 BACKUP_DIR="/home/cyberforum/backups"
-DB_FILE="/var/www/cyberpunk-forum/prisma/production.db"
+DB_FILE="/var/www/cyberpunk-forum/prisma/dev.db"
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="$BACKUP_DIR/cyberforum_backup_$DATE.db"
 
@@ -708,6 +709,10 @@ Add:
 
 cd /var/www/cyberpunk-forum
 
+echo "Backing up database..."
+mkdir -p ~/backups
+sqlite3 prisma/dev.db ".backup '$HOME/backups/pre-update-$(date +%Y%m%d_%H%M%S).db'"
+
 echo "Pulling latest changes..."
 git pull
 
@@ -716,7 +721,7 @@ npm install
 
 echo "Running database migrations..."
 npx prisma generate
-npx prisma db push
+npx prisma migrate deploy
 
 echo "Building application..."
 npm run build
@@ -762,7 +767,7 @@ To update the application:
 
 4. Check database file exists:
    ```bash
-   ls -la /var/www/cyberpunk-forum/prisma/production.db
+   ls -la /var/www/cyberpunk-forum/prisma/dev.db
    ```
 
 ### 502 Bad Gateway Error
@@ -813,14 +818,15 @@ To update the application:
 
 2. Verify database integrity:
    ```bash
-   sqlite3 /var/www/cyberpunk-forum/prisma/production.db "PRAGMA integrity_check;"
+   sqlite3 /var/www/cyberpunk-forum/prisma/dev.db "PRAGMA integrity_check;"
    ```
 
 3. Re-run migrations:
    ```bash
    cd /var/www/cyberpunk-forum
-   npx prisma db push --force-reset
-   npm run db:seed
+   # Applies pending migrations without touching existing data.
+   # Never use `db push --force-reset` here: it deletes the whole database.
+   npx prisma migrate deploy
    ```
 
 ### File Upload Issues
@@ -901,8 +907,8 @@ sudo nginx -t                      # Test configuration
 ### Database Management
 ```bash
 npx prisma studio                  # Open database GUI
-npx prisma db push                 # Apply schema changes
-sqlite3 prisma/production.db       # Open database CLI
+npx prisma migrate deploy          # Apply pending migrations
+sqlite3 prisma/dev.db       # Open database CLI
 ```
 
 ### SSL Certificate Management

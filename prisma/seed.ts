@@ -1,12 +1,11 @@
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import bcrypt from "bcryptjs";
-import path from "path";
+import { databaseUrl } from "../src/lib/database-url";
 import { randomBytes } from "crypto";
 
-const adapter = new PrismaLibSql({
-  url: `file:${path.join(process.cwd(), "prisma", "dev.db")}`,
-});
+const adapter = new PrismaLibSql({ url: databaseUrl() });
 
 const prisma = new PrismaClient({ adapter });
 
@@ -209,9 +208,9 @@ Thinking about:
   }
 
   console.log("Seeding completed!");
-  console.log("\nTest accounts:");
-  console.log("Admin: admin@nightcity.com / admin123");
-  console.log("User: v@nightcity.com / user123");
+  console.log("\nAccounts (passwords from env or printed above when generated):");
+  console.log("Admin: admin@nightcity.com");
+  console.log("User: v@nightcity.com");
 }
 
 main()

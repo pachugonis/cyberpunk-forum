@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { unlink } from 'fs/promises';
 import { prisma } from '../src/lib/prisma';
 import { uploadPath } from '../src/lib/uploads';

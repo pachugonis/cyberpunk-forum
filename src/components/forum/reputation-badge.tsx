@@ -1,6 +1,6 @@
 "use client";
 
-import { getReputationLevel } from "@/lib/reputation";
+import { getReputationLevel } from "@/lib/reputation-levels";
 import { Trophy } from "lucide-react";
 import { useTranslations } from "next-intl";
 

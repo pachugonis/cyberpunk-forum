@@ -1,6 +1,6 @@
 "use client";
 
-import { BADGE_DEFINITIONS, BadgeType } from "@/lib/badges";
+import { BADGE_DEFINITIONS, BadgeType } from "@/lib/badge-definitions";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslations, useLocale } from "next-intl";
