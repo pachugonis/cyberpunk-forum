@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { verifyTwoFactorToken } from "./two-factor";
+import { allowAuthAttempt } from "./rate-limit";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -13,8 +14,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
         token: { label: "2FA code", type: "text" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        if (!allowAuthAttempt(request, "login", credentials.email as string)) {
           return null;
         }
 
@@ -72,7 +77,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: string }).role;
+        token.authTime = Date.now();
+        return token;
       }
+
+      // Re-check the account on every request so role changes apply
+      // immediately and a password reset ends all existing sessions
+      const dbUser = await prisma.user.findUnique({
+        where: { id: token.id as string },
+        select: { role: true, passwordChangedAt: true },
+      });
+
+      const authTime = typeof token.authTime === "number" ? token.authTime : 0;
+      if (!dbUser || (dbUser.passwordChangedAt && dbUser.passwordChangedAt.getTime() > authTime)) {
+        return null;
+      }
+
+      token.role = dbUser.role;
       return token;
     },
     async session({ session, token }) {

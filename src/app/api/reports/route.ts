@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
+import { ReportStatus } from "@prisma/client";
+import { clampInt } from "@/lib/utils";
 
 const createReportSchema = z.object({
   reason: z.string().min(3, "Reason must be at least 3 characters").max(100),
@@ -125,11 +127,15 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const page = clampInt(searchParams.get("page"), 1, 1, 10000);
+    const limit = clampInt(searchParams.get("limit"), 20, 1, 100);
     const skip = (page - 1) * limit;
 
-    const where = status ? { status: status as any } : {};
+    const parsedStatus = z.enum(ReportStatus).safeParse(status);
+    if (status && !parsedStatus.success) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+    const where = parsedStatus.success ? { status: parsedStatus.data } : {};
 
     const [reports, total] = await Promise.all([
       prisma.report.findMany({

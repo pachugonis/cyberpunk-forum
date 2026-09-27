@@ -12,7 +12,6 @@ interface MessageItemProps {
   sender: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   };
 }
@@ -23,7 +22,7 @@ export function MessageItem({ content, createdAt, isOwn, sender }: MessageItemPr
       <Avatar className="h-8 w-8 border-2 border-primary/30">
         <AvatarImage src={sender.image || ""} />
         <AvatarFallback className="bg-primary/20 text-primary text-xs">
-          {sender.name?.[0]?.toUpperCase() || sender.email[0].toUpperCase()}
+          {sender.name?.[0]?.toUpperCase() || "?"}
         </AvatarFallback>
       </Avatar>
       <div className={cn("flex flex-col max-w-[70%]", isOwn && "items-end")}>

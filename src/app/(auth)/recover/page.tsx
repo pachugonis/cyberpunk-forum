@@ -12,7 +12,9 @@ import { toast } from "sonner";
 export default function RecoverPage() {
   const router = useRouter();
   const t = useTranslations('auth.recover');
-  const [step, setStep] = useState<'code' | 'password'>('code');
+  const tRegister = useTranslations('auth.register');
+  const [step, setStep] = useState<'code' | 'password' | 'done'>('code');
+  const [newRecoveryCode, setNewRecoveryCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -82,7 +84,9 @@ export default function RecoverPage() {
         setError(data.error || t('error'));
       } else {
         toast.success(t('success'));
-        router.push("/login?recovered=true");
+        // The old recovery code is now invalid; show the replacement once
+        setNewRecoveryCode(data.recoveryCode);
+        setStep('done');
       }
     } catch {
       setError("Something went wrong");
@@ -151,6 +155,30 @@ export default function RecoverPage() {
             )}
           </Button>
         </form>
+      ) : step === 'done' ? (
+        <div className="space-y-6">
+          <div className="p-4 border border-[var(--cyber-cyan)] bg-[var(--cyber-cyan)]/5 clip-cyber">
+            <Label className="text-xs text-[var(--cyber-cyan)] font-mono uppercase mb-2 block">
+              {tRegister('recoveryCodeLabel')}
+            </Label>
+            <code className="block text-2xl font-bold text-white font-mono tracking-wider break-all">
+              {newRecoveryCode}
+            </code>
+          </div>
+
+          <div className="p-3 border border-[var(--cyber-magenta)]/50 bg-[var(--cyber-magenta)]/5 clip-cyber">
+            <p className="text-xs text-[var(--cyber-magenta)] font-mono">
+              ⚠️ {tRegister('recoveryCodeWarning')} {tRegister('recoveryCodeImportant')}
+            </p>
+          </div>
+
+          <Button
+            onClick={() => router.push("/login?recovered=true")}
+            className="w-full h-12 text-base bg-[var(--cyber-magenta)] text-white hover:shadow-neon-magenta border-0 clip-cyber font-mono uppercase tracking-wider"
+          >
+            {tRegister('understood')}
+          </Button>
+        </div>
       ) : (
         <form onSubmit={handleResetPassword} className="space-y-6">
           {error && (

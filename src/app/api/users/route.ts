@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 // GET all users (for messaging/search purposes)
 export async function GET(request: NextRequest) {
@@ -22,7 +23,6 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           name: true,
-          email: true,
           image: true,
         }
       });
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(user);
     }
 
-    const whereClause: any = {
+    const whereClause: Prisma.UserWhereInput = {
       id: {
         not: session.user.id // Exclude current user
       }
@@ -43,18 +43,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       // For SQLite, we can't use case-insensitive mode, so we'll filter in memory
       // or use contains without mode for exact case matching
-      whereClause.OR = [
-        {
-          name: {
-            contains: search
-          }
-        },
-        {
-          email: {
-            contains: search
-          }
-        }
-      ];
+      whereClause.name = { contains: search };
     }
 
     const users = await prisma.user.findMany({
@@ -62,7 +51,6 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         name: true,
-        email: true,
         image: true,
       },
       orderBy: {

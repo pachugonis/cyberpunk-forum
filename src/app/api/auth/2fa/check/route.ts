@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getClientIp, rateLimit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!rateLimit(`2fa-check:ip:${getClientIp(request)}`, 30, 15 * 60 * 1000)) {
+      return NextResponse.json({ error: TOO_MANY_ATTEMPTS }, { status: 429 });
+    }
+
     const body = await request.json();
     const { email } = body;
 

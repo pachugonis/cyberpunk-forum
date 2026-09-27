@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyTwoFactorToken } from "@/lib/two-factor";
 import bcrypt from "bcryptjs";
+import { allowAuthAttempt, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +14,10 @@ export async function POST(request: NextRequest) {
         { error: "Email, password, and token are required" },
         { status: 400 }
       );
+    }
+
+    if (!allowAuthAttempt(request, "2fa", String(email))) {
+      return NextResponse.json({ error: TOO_MANY_ATTEMPTS }, { status: 429 });
     }
 
     // Find user
@@ -46,9 +51,10 @@ export async function POST(request: NextRequest) {
 
     // Check if 2FA is enabled
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+      // Same response as a wrong password, so this can't be used to probe accounts
       return NextResponse.json(
-        { error: "Two-factor authentication is not enabled for this account" },
-        { status: 400 }
+        { error: "Invalid credentials" },
+        { status: 401 }
       );
     }
 

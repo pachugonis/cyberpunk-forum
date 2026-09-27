@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clampInt } from "@/lib/utils";
 
 // GET /api/notifications - Get user notifications
 export async function GET(request: NextRequest) {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const limit = clampInt(searchParams.get("limit"), 20, 1, 100);
     const unreadOnly = searchParams.get("unreadOnly") === "true";
 
     const where = {

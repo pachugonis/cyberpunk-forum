@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { MessageList, MessageItem, ComposeMessage } from "@/components/forum";
 import { CyberCard, GlitchText } from "@/components/cyberpunk";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -32,13 +31,11 @@ interface Message {
   sender: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   };
   receiver: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   };
 }
@@ -50,7 +47,6 @@ interface Conversation {
   otherUser: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   };
   unreadCount: number;
@@ -59,13 +55,11 @@ interface Conversation {
 interface User {
   id: string;
   name: string | null;
-  email: string;
   image: string | null;
 }
 
 export default function MessagesPage() {
   const { data: session } = useSession();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("messages");
   const tCommon = useTranslations("common");
@@ -85,27 +79,9 @@ export default function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Load conversations
-  useEffect(() => {
-    if (session?.user?.id) {
-      loadConversations();
-    }
-  }, [session]);
+  const sessionUserId = session?.user?.id;
 
-  // Check for userId in URL params (for "Send Message" links)
-  useEffect(() => {
-    const userId = searchParams.get("userId");
-    if (userId && session?.user?.id) {
-      handleSelectConversation(userId);
-    }
-  }, [searchParams, session]);
-
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch("/api/messages");
@@ -118,81 +94,68 @@ export default function MessagesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadMessages = async (otherUserId: string) => {
+  // Doesn't rely on the conversation list, so it also works when opened from a
+  // link or notification before the list has loaded
+  const handleSelectConversation = useCallback(async (userId: string) => {
+    setSelectedUserId(userId);
+    setLoadingMessages(true);
+
     try {
-      setLoadingMessages(true);
-      const response = await fetch(
-        `/api/messages?otherUserId=${otherUserId}`
-      );
-      if (!response.ok) throw new Error("Failed to load messages");
-      const data = await response.json();
-      setMessages(data);
+      const [userResponse, messagesResponse] = await Promise.all([
+        fetch(`/api/users?userId=${encodeURIComponent(userId)}`),
+        fetch(`/api/messages?otherUserId=${encodeURIComponent(userId)}`),
+      ]);
+      if (!userResponse.ok || !messagesResponse.ok) {
+        throw new Error("Failed to load conversation");
+      }
+
+      setSelectedUser(await userResponse.json());
+      const loadedMessages: Message[] = await messagesResponse.json();
+      setMessages(loadedMessages);
+
+      // Mark messages as read
+      if (loadedMessages.length > 0) {
+        await fetch("/api/messages", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ senderId: userId }),
+        });
+
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.otherUser.id === userId ? { ...conv, unreadCount: 0 } : conv
+          )
+        );
+      }
     } catch (error) {
-      console.error("Error loading messages:", error);
+      console.error("Error loading conversation:", error);
       toast.error("Failed to load messages");
     } finally {
       setLoadingMessages(false);
     }
-  };
+  }, []);
 
-  const handleSelectConversation = async (userId: string) => {
-    console.log("handleSelectConversation called with userId:", userId);
-    setSelectedUserId(userId);
-
-    // Find conversation with this user
-    const conversation = conversations.find(
-      (conv) => conv.otherUser.id === userId
-    );
-
-    console.log("Found conversation:", conversation);
-
-    if (conversation) {
-      console.log("Setting selected user from conversation:", conversation.otherUser);
-      setSelectedUser(conversation.otherUser);
-      await loadMessages(userId);
-
-      // Mark messages as read
-      await fetch("/api/messages", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ senderId: userId }),
-      });
-
-      // Update unread count in local state
-      setConversations((prev) =>
-        prev.map((conv) =>
-          conv.otherUser.id === userId ? { ...conv, unreadCount: 0 } : conv
-        )
-      );
-    } else {
-      console.log("No existing conversation, fetching user details...");
-      // New conversation - fetch user details
-      try {
-        const response = await fetch(`/api/users?userId=${userId}`);
-        console.log("User fetch response status:", response.status);
-        if (response.ok) {
-          const userData = await response.json();
-          console.log("Selected user data:", userData);
-          if (userData && userData.id) {
-            setSelectedUser(userData);
-            setMessages([]);
-            console.log("Selected user set successfully");
-          } else {
-            console.error("Invalid user data received");
-            toast.error("Failed to load user details");
-          }
-        } else {
-          console.error("Failed to fetch user:", response.statusText);
-          toast.error("Failed to load user details");
-        }
-      } catch (error) {
-        console.error("Error loading user:", error);
-        toast.error("Failed to load user details");
-      }
+  // Load conversations
+  useEffect(() => {
+    if (sessionUserId) {
+      loadConversations();
     }
-  };
+  }, [sessionUserId, loadConversations]);
+
+  // Check for userId in URL params (for "Send Message" links)
+  const userIdParam = searchParams.get("userId");
+  useEffect(() => {
+    if (userIdParam && sessionUserId) {
+      handleSelectConversation(userIdParam);
+    }
+  }, [userIdParam, sessionUserId, handleSelectConversation]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSendMessage = async (content: string) => {
     if (!selectedUserId || !session?.user?.id) return;
@@ -241,8 +204,7 @@ export default function MessagesPage() {
   };
 
   const filteredUsers = users.filter((user) =>
-    (user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()))
+    user.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (!session) {
@@ -296,17 +258,11 @@ export default function MessagesPage() {
                       <Avatar className="h-10 w-10 border-2 border-primary/30">
                         <AvatarImage src={user.image || ""} />
                         <AvatarFallback className="bg-primary/20 text-primary">
-                          {user.name?.[0]?.toUpperCase() ||
-                            user.email[0].toUpperCase()}
+                          {user.name?.[0]?.toUpperCase() || "?"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="text-left">
-                        <p className="font-medium">{user.name || user.email}</p>
-                        {user.name && (
-                          <p className="text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
-                        )}
+                        <p className="font-medium">{user.name || "Anonymous"}</p>
                       </div>
                     </button>
                   ))}
@@ -359,13 +315,12 @@ export default function MessagesPage() {
                   <Avatar className="h-10 w-10 border-2 border-primary/30">
                     <AvatarImage src={selectedUser.image || ""} />
                     <AvatarFallback className="bg-primary/20 text-primary">
-                      {selectedUser.name?.[0]?.toUpperCase() ||
-                        selectedUser.email[0].toUpperCase()}
+                      {selectedUser.name?.[0]?.toUpperCase() || "?"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <h3 className="font-semibold">
-                      {selectedUser.name || selectedUser.email}
+                      {selectedUser.name || "Anonymous"}
                     </h3>
                   </div>
                 </div>

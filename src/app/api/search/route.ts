@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
     }
 
     // Build dynamic where clause
-    const whereClause: any = {
+    const whereClause: Prisma.TopicWhereInput = {
       deletedAt: null, // Exclude deleted topics
       OR: [
         { title: { contains: query } },
@@ -65,7 +66,7 @@ export async function GET(request: Request) {
     }
 
     // Build orderBy clause
-    let orderBy: any;
+    let orderBy: Prisma.TopicOrderByWithRelationInput;
     switch (sortBy) {
       case "oldest":
         orderBy = { createdAt: "asc" };

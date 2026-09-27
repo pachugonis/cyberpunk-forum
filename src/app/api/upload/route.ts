@@ -116,6 +116,7 @@ export async function POST(request: Request) {
         filename,
         originalName: file.name,
         mimeType,
+        uploaderId: session.user.id,
         size: file.size,
         url: `/uploads/${filename}`,
       },
@@ -180,14 +181,17 @@ export async function DELETE(request: Request) {
     }
 
     // Check if user is authorized to delete
-    // Allow deletion if attachment is not yet connected to any topic/comment (orphaned)
-    const isOrphaned = !attachment.topicId && !attachment.commentId;
+    // Uploaders may delete their own attachments that aren't connected to a topic/comment yet
+    const isOwnOrphan =
+      !attachment.topicId &&
+      !attachment.commentId &&
+      attachment.uploaderId === session.user.id;
     const isAuthor = 
       attachment.topic?.authorId === session.user.id ||
       attachment.comment?.authorId === session.user.id;
     const isAdmin = session.user.role === "ADMIN" || session.user.role === "MODERATOR";
 
-    if (!isOrphaned && !isAuthor && !isAdmin) {
+    if (!isOwnOrphan && !isAuthor && !isAdmin) {
       return NextResponse.json(
         { error: "Unauthorized to delete this attachment" },
         { status: 403 }

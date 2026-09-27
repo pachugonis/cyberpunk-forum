@@ -6,7 +6,7 @@ import { z } from "zod";
 
 const updateTopicSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(200).optional(),
-  content: z.string().min(10, "Content must be at least 10 characters").optional(),
+  content: z.string().min(10, "Content must be at least 10 characters").max(50000).optional(),
   categoryId: z.string().optional(),
 });
 
@@ -174,7 +174,7 @@ export async function PUT(
     const validatedData = updateTopicSchema.parse(body);
 
     // Prepare update data
-    const updateData: any = {
+    const updateData = {
       ...validatedData,
       editedAt: new Date(),
     };
@@ -268,11 +268,18 @@ export async function DELETE(
       );
     }
 
-    // Soft delete - set deletedAt timestamp
-    await prisma.topic.update({
-      where: { id },
+    // Soft delete - only matches if not already deleted, so repeats are no-ops
+    const { count } = await prisma.topic.updateMany({
+      where: { id, deletedAt: null },
       data: { deletedAt: new Date() },
     });
+
+    if (count === 0) {
+      return NextResponse.json(
+        { error: "Topic not found" },
+        { status: 404 }
+      );
+    }
 
     // Deduct reputation for deleting a topic
     await deductTopicDeletionReputation(topic.authorId);

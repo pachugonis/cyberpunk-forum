@@ -33,7 +33,8 @@ export async function PUT(
       },
     });
 
-    if (!comment) {
+    // Deleted comments can be neither edited nor deleted again
+    if (!comment || comment.deletedAt) {
       return NextResponse.json(
         { error: "Comment not found" },
         { status: 404 }
@@ -134,7 +135,8 @@ export async function DELETE(
       },
     });
 
-    if (!comment) {
+    // Deleted comments can be neither edited nor deleted again
+    if (!comment || comment.deletedAt) {
       return NextResponse.json(
         { error: "Comment not found" },
         { status: 404 }
@@ -182,14 +184,21 @@ export async function DELETE(
       });
     }
 
-    // Soft delete: just mark as deleted
-    const deletedComment = await prisma.comment.update({
-      where: { id },
+    // Soft delete: only matches if not already deleted, so concurrent repeats are no-ops
+    const { count } = await prisma.comment.updateMany({
+      where: { id, deletedAt: null },
       data: {
         deletedAt: new Date(),
         content: "[deleted]",
       },
     });
+
+    if (count === 0) {
+      return NextResponse.json(
+        { error: "Comment not found" },
+        { status: 404 }
+      );
+    }
 
     // Deduct reputation for deleting a comment
     await deductCommentDeletionReputation(comment.authorId);

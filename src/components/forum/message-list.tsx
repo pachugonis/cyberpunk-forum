@@ -7,25 +7,6 @@ import { formatDistanceToNow } from "date-fns";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
-interface Message {
-  id: string;
-  content: string;
-  createdAt: string | Date;
-  isRead: boolean;
-  sender: {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
-  };
-  receiver: {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
-  };
-}
-
 interface Conversation {
   id: string;
   content: string;
@@ -33,7 +14,6 @@ interface Conversation {
   otherUser: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   };
   unreadCount: number;
@@ -77,14 +57,13 @@ export function MessageList({
                 <Avatar className="h-12 w-12 border-2 border-primary/30">
                   <AvatarImage src={conversation.otherUser.image || ""} />
                   <AvatarFallback className="bg-primary/20 text-primary">
-                    {conversation.otherUser.name?.[0]?.toUpperCase() ||
-                      conversation.otherUser.email[0].toUpperCase()}
+                    {conversation.otherUser.name?.[0]?.toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="font-semibold text-sm truncate">
-                      {conversation.otherUser.name || conversation.otherUser.email}
+                      {conversation.otherUser.name || "Anonymous"}
                     </h3>
                     <span className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(conversation.createdAt), {

@@ -6,6 +6,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Parse an integer query param, falling back to `fallback` and clamping to [min, max]
+ */
+export function clampInt(value: string | null, fallback: number, min: number, max: number): number {
+  const parsed = parseInt(value ?? "", 10)
+  if (Number.isNaN(parsed)) return fallback
+  return Math.min(Math.max(parsed, min), max)
+}
+
+/**
  * Generate a recovery code in format XXXX-XXXX-XXXX-XXXX
  * Uses alphanumeric characters (excluding ambiguous ones like 0, O, I, l)
  */

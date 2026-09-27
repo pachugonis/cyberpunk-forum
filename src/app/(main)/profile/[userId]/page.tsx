@@ -24,7 +24,6 @@ async function getUser(userId: string) {
     select: {
       id: true,
       name: true,
-      email: true,
       image: true,
       role: true,
       bio: true,
@@ -89,7 +88,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const badgeStats = await getUserBadgeStats(userId);
   
   // Extract badges for display
-  const badgesForDisplay = userBadges.map((badge: any) => ({
+  const badgesForDisplay = userBadges.map((badge) => ({
     badgeType: badge.badgeType,
     earnedAt: badge.earnedAt
   }));

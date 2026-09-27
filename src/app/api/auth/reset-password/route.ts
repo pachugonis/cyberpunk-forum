@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { generateRecoveryCode } from "@/lib/utils";
+import { allowAuthAttempt, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
 
 const resetSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -14,6 +16,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, recoveryCode, newPassword } = resetSchema.parse(body);
 
+    if (!allowAuthAttempt(request, "recovery", email)) {
+      return NextResponse.json({ error: TOO_MANY_ATTEMPTS }, { status: 429 });
+    }
+
     // Remove dashes from recovery code for comparison
     const cleanCode = recoveryCode.replace(/-/g, '');
 
@@ -21,16 +27,10 @@ export async function POST(request: Request) {
       where: { email },
     });
 
-    if (!user) {
+    // Same response for every failure so accounts can't be probed
+    if (!user || !user.recoveryCode) {
       return NextResponse.json(
         { error: "Invalid email or recovery code" },
-        { status: 400 }
-      );
-    }
-
-    if (!user.recoveryCode) {
-      return NextResponse.json(
-        { error: "No recovery code found for this account" },
         { status: 400 }
       );
     }
@@ -47,16 +47,22 @@ export async function POST(request: Request) {
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-    // Update password
+    // A recovery code is single-use: issue a new one along with the new password
+    const newRecoveryCode = generateRecoveryCode();
+    const hashedRecoveryCode = await bcrypt.hash(newRecoveryCode.replace(/-/g, ''), 12);
+
+    // passwordChangedAt ends all sessions issued before the reset
     await prisma.user.update({
       where: { id: user.id },
       data: {
         password: hashedPassword,
+        recoveryCode: hashedRecoveryCode,
+        passwordChangedAt: new Date(),
       },
     });
 
     return NextResponse.json(
-      { message: "Password reset successfully" },
+      { message: "Password reset successfully", recoveryCode: newRecoveryCode },
       { status: 200 }
     );
   } catch (error) {

@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { generateRecoveryCode } from "@/lib/utils";
+import { getClientIp, rateLimit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -12,6 +13,10 @@ const registerSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    if (!rateLimit(`register:ip:${getClientIp(request)}`, 5, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: TOO_MANY_ATTEMPTS }, { status: 429 });
+    }
+
     const body = await request.json();
     const { name, email, password } = registerSchema.parse(body);
 

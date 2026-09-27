@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
+import { z } from "zod";
+
+const sendMessageSchema = z.object({
+  receiverId: z.string().min(1, "Receiver is required"),
+  content: z.string().trim().min(1, "Message cannot be empty").max(5000),
+});
 
 // GET all conversations for the logged-in user
 export async function GET(request: NextRequest) {
@@ -34,7 +41,6 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               name: true,
-              email: true,
               image: true
             }
           },
@@ -42,7 +48,6 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               name: true,
-              email: true,
               image: true
             }
           }
@@ -65,7 +70,6 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            email: true,
             image: true
           }
         }
@@ -84,7 +88,6 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            email: true,
             image: true
           }
         }
@@ -152,11 +155,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { receiverId, content } = await request.json();
+    const parsed = sendMessageSchema.safeParse(await request.json().catch(() => null));
 
-    if (!receiverId || !content) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Receiver and content are required" },
+        { error: parsed.error.issues[0]?.message ?? "Invalid request" },
+        { status: 400 }
+      );
+    }
+
+    const { receiverId, content } = parsed.data;
+
+    if (receiverId === session.user.id) {
+      return NextResponse.json(
+        { error: "Cannot send a message to yourself" },
         { status: 400 }
       );
     }
@@ -217,7 +229,6 @@ export async function POST(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            email: true,
             image: true
           }
         },
@@ -225,7 +236,6 @@ export async function POST(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            email: true,
             image: true
           }
         }
@@ -236,10 +246,10 @@ export async function POST(request: NextRequest) {
     await prisma.notification.create({
       data: {
         type: "NEW_MESSAGE",
-        content: `${session.user.name || session.user.email} sent you a message`,
+        content: `${session.user.name || "Someone"} sent you a message`,
         userId: receiverId,
         actorId: session.user.id,
-        actorName: session.user.name || session.user.email || "Anonymous"
+        actorName: session.user.name || "Anonymous"
       }
     });
 
@@ -271,7 +281,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const whereClause: any = {
+    const whereClause: Prisma.MessageWhereInput = {
       receiverId: session.user.id,
       isRead: false
     };

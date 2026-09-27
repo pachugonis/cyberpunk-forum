@@ -11,7 +11,7 @@ const MAX_REPLY_DEPTH = 3;
 const commentSchema = z.object({
   content: z.string().min(1, "Comment cannot be empty").max(5000),
   parentId: z.string().optional(),
-  attachmentIds: z.array(z.string()).optional(),
+  attachmentIds: z.array(z.string()).max(5).optional(),
 });
 
 export async function POST(
@@ -87,7 +87,7 @@ export async function POST(
       }
     }
 
-    // Validate attachments exist and are orphaned (not connected to any topic/comment yet)
+    // Validate attachments exist, belong to the user and aren't connected to any topic/comment yet
     if (attachmentIds && attachmentIds.length > 0) {
       const attachments = await prisma.attachment.findMany({
         where: {
@@ -97,7 +97,7 @@ export async function POST(
 
       // Filter out attachments that don't exist or are already connected
       const validAttachmentIds = attachments
-        .filter(att => !att.topicId && !att.commentId)
+        .filter(att => !att.topicId && !att.commentId && att.uploaderId === session.user.id)
         .map(att => att.id);
 
       if (validAttachmentIds.length !== attachmentIds.length) {

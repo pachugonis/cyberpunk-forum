@@ -19,6 +19,7 @@ model User {
   reputation         Int       @default(0)
   twoFactorEnabled   Boolean   @default(false)
   twoFactorSecret    String?
+  passwordChangedAt  DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   
@@ -31,6 +32,7 @@ model User {
   conversations Conversation[]
   reports       Report[]
   badges        Badge[]
+  attachments   Attachment[]
   
   @@map("users")
 }
@@ -224,8 +226,12 @@ model Attachment {
   commentId   String?
   comment     Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
   
+  uploaderId  String?
+  uploader    User?    @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+  
   @@index([topicId])
   @@index([commentId])
+  @@index([uploaderId])
   @@map("attachments")
 }
 

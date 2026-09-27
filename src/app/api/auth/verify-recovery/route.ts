@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { allowAuthAttempt, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
 
 const verifySchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -13,6 +14,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, recoveryCode } = verifySchema.parse(body);
 
+    if (!allowAuthAttempt(request, "recovery", email)) {
+      return NextResponse.json({ error: TOO_MANY_ATTEMPTS }, { status: 429 });
+    }
+
     // Remove dashes from recovery code for comparison
     const cleanCode = recoveryCode.replace(/-/g, '');
 
@@ -20,16 +25,10 @@ export async function POST(request: Request) {
       where: { email },
     });
 
-    if (!user) {
+    // Same response for every failure so accounts can't be probed
+    if (!user || !user.recoveryCode) {
       return NextResponse.json(
         { error: "Invalid email or recovery code" },
-        { status: 400 }
-      );
-    }
-
-    if (!user.recoveryCode) {
-      return NextResponse.json(
-        { error: "No recovery code found for this account" },
         { status: 400 }
       );
     }

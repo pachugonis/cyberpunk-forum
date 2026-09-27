@@ -3,23 +3,24 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { awardTopicCreationReputation } from "@/lib/reputation";
 import { z } from "zod";
+import { clampInt } from "@/lib/utils";
 
 const topicSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(200),
-  content: z.string().min(10, "Content must be at least 10 characters"),
+  content: z.string().min(10, "Content must be at least 10 characters").max(50000),
   categoryId: z.string(),
-  attachmentIds: z.array(z.string()).optional(),
+  attachmentIds: z.array(z.string()).max(5).optional(),
 });
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const categoryId = searchParams.get("categoryId");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const page = clampInt(searchParams.get("page"), 1, 1, 10000);
+    const limit = clampInt(searchParams.get("limit"), 10, 1, 50);
     const skip = (page - 1) * limit;
 
-    const where = categoryId ? { categoryId } : {};
+    const where = { deletedAt: null, ...(categoryId ? { categoryId } : {}) };
 
     const [topics, total] = await Promise.all([
       prisma.topic.findMany({
@@ -95,14 +96,22 @@ export async function POST(request: Request) {
       );
     }
 
+    // Only attach the user's own uploads that aren't connected to another topic/comment yet
+    const validAttachmentIds = attachmentIds && attachmentIds.length > 0
+      ? (await prisma.attachment.findMany({
+          where: { id: { in: attachmentIds }, topicId: null, commentId: null, uploaderId: session.user.id },
+          select: { id: true },
+        })).map((att) => att.id)
+      : [];
+
     const topic = await prisma.topic.create({
       data: {
         title,
         content,
         categoryId,
         authorId: session.user.id,
-        attachments: attachmentIds && attachmentIds.length > 0 ? {
-          connect: attachmentIds.map(id => ({ id })),
+        attachments: validAttachmentIds.length > 0 ? {
+          connect: validAttachmentIds.map(id => ({ id })),
         } : undefined,
       },
       include: {
