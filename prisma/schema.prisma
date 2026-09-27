@@ -80,7 +80,8 @@ model Topic {
   attachments Attachment[]
   reports     Report[]
   
-  @@index([categoryId])
+  @@index([categoryId, deletedAt, isPinned, createdAt])
+  @@index([deletedAt, isPinned, createdAt])
   @@index([authorId])
   @@index([createdAt])
   @@index([isPinned, createdAt])
@@ -109,7 +110,7 @@ model Comment {
   attachments Attachment[]
   reports     Report[]
   
-  @@index([topicId])
+  @@index([topicId, createdAt])
   @@index([authorId])
   @@index([parentId])
   @@index([createdAt])
@@ -201,8 +202,8 @@ model Message {
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   
-  @@index([senderId])
-  @@index([receiverId])
+  @@index([senderId, receiverId, createdAt])
+  @@index([receiverId, isRead])
   @@index([conversationId])
   @@index([createdAt])
   @@map("messages")
@@ -249,7 +250,7 @@ model Report {
   @@index([reporterId])
   @@index([topicId])
   @@index([commentId])
-  @@index([status])
+  @@index([status, createdAt])
   @@index([createdAt])
   @@map("reports")
 }
@@ -270,7 +271,6 @@ model Badge {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@unique([userId, badgeType])
-  @@index([userId])
   @@index([badgeType])
   @@map("badges")
 }
