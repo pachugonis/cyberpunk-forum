@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { TopicActions, EditTopicDialog, ReportButton, MarkdownContent } from "@/components/forum";
+import { TopicActions } from "./topic-actions";
+import { EditTopicDialog } from "./edit-topic-dialog";
+import { ReportButton } from "./report-button";
 import { GlitchText, HologramBadge } from "@/components/cyberpunk";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Pin, Lock } from "lucide-react";
@@ -35,11 +37,13 @@ interface TopicHeaderProps {
       color: string | null;
     };
   };
+  // Markdown pre-rendered on the server, so the markdown parser isn't shipped to the browser
+  renderedContent: React.ReactNode;
   currentUserId?: string;
   userRole?: string;
 }
 
-export function TopicHeader({ topic, currentUserId, userRole }: TopicHeaderProps) {
+export function TopicHeader({ topic, renderedContent, currentUserId, userRole }: TopicHeaderProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const t = useTranslations('topic');
   const locale = useLocale();
@@ -150,7 +154,7 @@ export function TopicHeader({ topic, currentUserId, userRole }: TopicHeaderProps
         </div>
 
         {/* Content */}
-        <MarkdownContent content={topic.content} />
+        {renderedContent}
       </article>
 
       <EditTopicDialog

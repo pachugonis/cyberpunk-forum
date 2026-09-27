@@ -3,7 +3,12 @@ import { after } from "next/server";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { CommentItem, CommentForm, ReactionButton, AttachmentList, TopicHeader } from "@/components/forum";
+import { CommentItem } from "@/components/forum/comment-item";
+import { CommentForm } from "@/components/forum/comment-form";
+import { ReactionButton } from "@/components/forum/reaction-button";
+import { AttachmentList } from "@/components/forum/attachment-list";
+import { TopicHeader } from "@/components/forum/topic-header";
+import { MarkdownContent } from "@/components/forum/markdown-content";
 import { Eye, MessageSquare } from "lucide-react";
 import { getTranslations } from 'next-intl/server';
 
@@ -57,9 +62,19 @@ async function getTopic(id: string) {
 
   if (!topic) return null;
 
-  type CommentNode = (typeof comments)[number] & { replies: CommentNode[] };
+  type CommentNode = (typeof comments)[number] & {
+    renderedContent: React.ReactNode;
+    replies: CommentNode[];
+  };
   const nodes = new Map<string, CommentNode>(
-    comments.map((c) => [c.id, { ...c, replies: [] }])
+    comments.map((c) => [
+      c.id,
+      {
+        ...c,
+        renderedContent: c.deletedAt ? null : <MarkdownContent content={c.content} />,
+        replies: [],
+      },
+    ])
   );
   const rootComments: CommentNode[] = [];
   for (const node of nodes.values()) {
@@ -96,6 +111,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
     <div className="space-y-6">
       <TopicHeader
         topic={topic}
+        renderedContent={<MarkdownContent content={topic.content} />}
         currentUserId={session?.user?.id}
         userRole={session?.user?.role}
       />

@@ -204,7 +204,10 @@
     "deleteCategory": "Delete Category",
     "backToCategories": "Back to categories",
     "noDescription": "No description",
-    "noTopicsInCategory": "No topics in this category yet."
+    "noTopicsInCategory": "No topics in this category yet.",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "pageOf": "Page {page} of {total}"
   },
   "profile": {
     "member": "Member",

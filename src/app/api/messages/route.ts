@@ -53,88 +53,60 @@ export async function GET(request: NextRequest) {
           }
         },
         orderBy: {
-          createdAt: "asc"
-        }
+          createdAt: "desc"
+        },
+        take: 200 // most recent history only
       });
 
-      return NextResponse.json(messages);
+      return NextResponse.json(messages.reverse());
     }
 
-    // Otherwise, get all conversations
-    const sentMessages = await prisma.message.findMany({
-      where: {
-        senderId: session.user.id
-      },
-      include: {
-        receiver: {
-          select: {
-            id: true,
-            name: true,
-            image: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: "desc"
-      }
+    // Otherwise, get all conversations: the latest message per partner plus
+    // the unread count, computed in SQL instead of loading every message
+    const userId = session.user.id;
+    const latest = await prisma.$queryRaw<
+      { id: string; otherId: string; unreadCount: number | bigint }[]
+    >`
+      WITH mine AS (
+        SELECT id, createdAt,
+          CASE WHEN senderId = ${userId} THEN receiverId ELSE senderId END AS otherId
+        FROM messages
+        WHERE senderId = ${userId} OR receiverId = ${userId}
+      ),
+      ranked AS (
+        SELECT id, otherId,
+          ROW_NUMBER() OVER (PARTITION BY otherId ORDER BY createdAt DESC) AS rn
+        FROM mine
+      )
+      SELECT r.id, r.otherId,
+        (SELECT COUNT(*) FROM messages u
+          WHERE u.receiverId = ${userId} AND u.senderId = r.otherId AND u.isRead = 0
+        ) AS unreadCount
+      FROM ranked r
+      WHERE r.rn = 1
+    `;
+
+    const [latestMessages, otherUsers] = await Promise.all([
+      prisma.message.findMany({
+        where: { id: { in: latest.map((row) => row.id) } },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.user.findMany({
+        where: { id: { in: latest.map((row) => row.otherId) } },
+        select: { id: true, name: true, image: true },
+      }),
+    ]);
+
+    const rowsById = new Map(latest.map((row) => [row.id, row]));
+    const usersById = new Map(otherUsers.map((user) => [user.id, user]));
+
+    const conversations = latestMessages.flatMap((msg) => {
+      const row = rowsById.get(msg.id)!;
+      const otherUser = usersById.get(row.otherId);
+      return otherUser
+        ? [{ ...msg, otherUser, unreadCount: Number(row.unreadCount) }]
+        : [];
     });
-
-    const receivedMessages = await prisma.message.findMany({
-      where: {
-        receiverId: session.user.id
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            name: true,
-            image: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: "desc"
-      }
-    });
-
-    // Group messages by conversation and get latest message for each user
-    const conversationsMap = new Map();
-
-    sentMessages.forEach((msg) => {
-      const otherUserId = msg.receiver.id;
-      if (!conversationsMap.has(otherUserId) || 
-          conversationsMap.get(otherUserId).createdAt < msg.createdAt) {
-        conversationsMap.set(otherUserId, {
-          ...msg,
-          otherUser: msg.receiver,
-          unreadCount: 0
-        });
-      }
-    });
-
-    receivedMessages.forEach((msg) => {
-      const otherUserId = msg.sender.id;
-      const existing = conversationsMap.get(otherUserId);
-      
-      if (!existing || existing.createdAt < msg.createdAt) {
-        conversationsMap.set(otherUserId, {
-          ...msg,
-          otherUser: msg.sender,
-          unreadCount: existing?.unreadCount || 0
-        });
-      }
-      
-      if (!msg.isRead) {
-        const current = conversationsMap.get(otherUserId);
-        conversationsMap.set(otherUserId, {
-          ...current,
-          unreadCount: (current.unreadCount || 0) + 1
-        });
-      }
-    });
-
-    const conversations = Array.from(conversationsMap.values())
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     return NextResponse.json(conversations);
   } catch (error) {

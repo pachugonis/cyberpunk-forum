@@ -390,15 +390,9 @@ export const BADGE_DEFINITIONS: Record<BadgeType, BadgeDefinition> = {
     color: "#34D399",
     rarity: "rare",
     criteria: async (userId: string) => {
-      const topics = await prisma.topic.findMany({
-        where: { authorId: userId },
-        include: {
-          _count: {
-            select: { comments: true },
-          },
-        },
+      const totalComments = await prisma.comment.count({
+        where: { topic: { authorId: userId } },
       });
-      const totalComments = topics.reduce((sum, topic) => sum + topic._count.comments, 0);
       return totalComments >= 500;
     },
   },
@@ -434,28 +428,34 @@ export async function checkAndAwardBadges(userId: string): Promise<string[]> {
   });
   const existingBadgeTypes = new Set(existingBadges.map((b) => b.badgeType));
   
-  // Check each badge type
-  for (const [badgeType, definition] of Object.entries(BADGE_DEFINITIONS)) {
-    // Skip if user already has this badge
-    if (existingBadgeTypes.has(badgeType)) {
-      continue;
-    }
-    
-    // Check if criteria is met
-    try {
-      const earned = await definition.criteria(userId);
-      if (earned) {
-        // Award the badge
-        await prisma.badge.create({
-          data: {
-            userId,
-            badgeType,
-          },
-        });
-        newBadges.push(badgeType);
+  // Check all not-yet-earned badges in parallel
+  const pending = Object.entries(BADGE_DEFINITIONS).filter(
+    ([badgeType]) => !existingBadgeTypes.has(badgeType)
+  );
+  const results = await Promise.all(
+    pending.map(async ([badgeType, definition]) => {
+      try {
+        return (await definition.criteria(userId)) ? badgeType : null;
+      } catch (error) {
+        console.error(`Error checking badge ${badgeType} for user ${userId}:`, error);
+        return null;
       }
+    })
+  );
+
+  for (const badgeType of results) {
+    if (!badgeType) continue;
+    try {
+      // Award the badge
+      await prisma.badge.create({
+        data: {
+          userId,
+          badgeType: badgeType as BadgeType,
+        },
+      });
+      newBadges.push(badgeType);
     } catch (error) {
-      console.error(`Error checking badge ${badgeType} for user ${userId}:`, error);
+      console.error(`Error awarding badge ${badgeType} for user ${userId}:`, error);
     }
   }
   
@@ -484,7 +484,14 @@ export async function getUserBadgeStats(userId: string) {
   const badges = await prisma.badge.findMany({
     where: { userId },
   });
-  
+
+  return summarizeBadges(badges);
+}
+
+/**
+ * Count badges by rarity (for badges that are already loaded)
+ */
+export function summarizeBadges(badges: { badgeType: string }[]) {
   const stats = {
     total: badges.length,
     common: 0,

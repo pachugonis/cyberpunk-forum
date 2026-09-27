@@ -49,11 +49,22 @@ export function NotificationBell() {
 
   useEffect(() => {
     fetchNotifications();
-    
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    
-    return () => clearInterval(interval);
+
+    // Poll every 60 seconds, but only while the tab is visible;
+    // refresh immediately when the user comes back to the tab
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") fetchNotifications();
+    }, 60000);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") fetchNotifications();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {

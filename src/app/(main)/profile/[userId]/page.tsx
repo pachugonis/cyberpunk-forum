@@ -3,15 +3,16 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
 import { auth } from "@/lib/auth";
-import { TopicCard, ReputationBadge, BadgeList, BadgeStats } from "@/components/forum";
+import { TopicCard } from "@/components/forum/topic-card";
+import { ReputationBadge } from "@/components/forum/reputation-badge";
+import { BadgeList, BadgeStats } from "@/components/forum/user-badge";
 import { GlitchText, HologramBadge, CyberCard } from "@/components/cyberpunk";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, MessageSquare, FileText, Mail, Award } from "lucide-react";
-import { getUserBadges, getUserBadgeStats } from "@/lib/badges";
-import { getTranslations } from 'next-intl/server';
-import { cookies } from 'next/headers';
+import { getUserBadges, summarizeBadges } from "@/lib/badges";
+import { getLocale, getTranslations } from 'next-intl/server';
 import { getDateFnsLocale } from '@/lib/date-locale';
 
 interface ProfilePageProps {
@@ -72,20 +73,20 @@ export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { userId } = await params;
-  const user = await getUser(userId);
-  const session = await auth();
-  const t = await getTranslations('profile');
-  const cookieStore = await cookies();
-  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'en';
+  const [user, session, t, locale, userBadges] = await Promise.all([
+    getUser(userId),
+    auth(),
+    getTranslations('profile'),
+    getLocale(),
+    getUserBadges(userId),
+  ]);
   const dateLocale = getDateFnsLocale(locale);
 
   if (!user) {
     notFound();
   }
 
-  // Get user badges and stats
-  const userBadges = await getUserBadges(userId);
-  const badgeStats = await getUserBadgeStats(userId);
+  const badgeStats = summarizeBadges(userBadges);
   
   // Extract badges for display
   const badgesForDisplay = userBadges.map((badge) => ({

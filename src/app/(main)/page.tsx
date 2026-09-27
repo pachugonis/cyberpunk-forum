@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { CategoryCard, TopicCard } from "@/components/forum";
+import { CategoryCard } from "@/components/forum/category-card";
+import { TopicCard } from "@/components/forum/topic-card";
 import { GlitchText } from "@/components/cyberpunk";
 import { Button } from "@/components/ui/button";
 import { getTranslations } from 'next-intl/server';

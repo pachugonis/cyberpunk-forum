@@ -204,7 +204,10 @@
     "deleteCategory": "Удалить категорию",
     "backToCategories": "Назад к категориям",
     "noDescription": "Описание отсутствует",
-    "noTopicsInCategory": "В этой категории пока нет тем."
+    "noTopicsInCategory": "В этой категории пока нет тем.",
+    "previousPage": "Назад",
+    "nextPage": "Вперёд",
+    "pageOf": "Страница {page} из {total}"
   },
   "profile": {
     "member": "Участник",

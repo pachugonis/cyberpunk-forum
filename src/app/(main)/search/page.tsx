@@ -3,7 +3,7 @@
 import { useState, useEffect, useEffectEvent, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { TopicCard } from "@/components/forum";
+import { TopicCard } from "@/components/forum/topic-card";
 import { GlitchText, CyberCard } from "@/components/cyberpunk";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

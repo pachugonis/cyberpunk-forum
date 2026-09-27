@@ -6,7 +6,6 @@ import { HologramBadge } from "@/components/cyberpunk";
 import { ReactionButton } from "./reaction-button";
 import { ReportButton } from "./report-button";
 import { AttachmentList } from "./attachment-list";
-import { MarkdownContent } from "./markdown-content";
 import { Reply, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -42,6 +41,8 @@ interface CommentItemProps {
       size: number;
       url: string;
     }>;
+    // Markdown pre-rendered on the server, so the markdown parser isn't shipped to the browser
+    renderedContent: React.ReactNode;
     replies?: CommentItemProps["comment"][];
   };
   topicId: string;
@@ -203,7 +204,7 @@ export function CommentItem({ comment, topicId, currentUserId, depth = 0 }: Comm
                 {isDeleted ? (
                   <span className="text-muted-foreground italic text-sm font-mono">{t("deleted")}</span>
                 ) : (
-                  <MarkdownContent content={comment.content} />
+                  comment.renderedContent
                 )}
               </div>
             )}

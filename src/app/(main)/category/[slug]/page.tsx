@@ -1,37 +1,24 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { TopicCard } from "@/components/forum";
+import { TopicCard } from "@/components/forum/topic-card";
 import { GlitchText } from "@/components/cyberpunk";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus, ArrowLeft } from "lucide-react";
 import { getTranslations } from 'next-intl/server';
+import { clampInt } from "@/lib/utils";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
-async function getCategory(slug: string) {
+const PAGE_SIZE = 20;
+
+async function getCategory(slug: string, page: number) {
   const category = await prisma.category.findUnique({
     where: { slug },
     include: {
-      topics: {
-        where: {
-          deletedAt: null, // Exclude deleted topics
-        },
-        orderBy: [
-          { isPinned: "desc" },
-          { createdAt: "desc" },
-        ],
-        include: {
-          author: {
-            select: { id: true, name: true, image: true, role: true },
-          },
-          _count: {
-            select: { comments: true, reactions: true },
-          },
-        },
-      },
       _count: {
         select: { 
           topics: {
@@ -44,15 +31,39 @@ async function getCategory(slug: string) {
     },
   });
 
-  return category;
+  if (!category) return null;
+
+  const topics = await prisma.topic.findMany({
+    where: {
+      categoryId: category.id,
+      deletedAt: null, // Exclude deleted topics
+    },
+    orderBy: [
+      { isPinned: "desc" },
+      { createdAt: "desc" },
+    ],
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    include: {
+      author: {
+        select: { id: true, name: true, image: true, role: true },
+      },
+      _count: {
+        select: { comments: true, reactions: true },
+      },
+    },
+  });
+
+  return { ...category, topics };
 }
 
 export const revalidate = 60; // Revalidate every 60 seconds
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { slug } = await params;
+export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
+  const [{ slug }, { page: pageParam }] = await Promise.all([params, searchParams]);
+  const page = clampInt(pageParam ?? null, 1, 1, 10000);
   const [category, tCategory, tHome] = await Promise.all([
-    getCategory(slug),
+    getCategory(slug, page),
     getTranslations('category'),
     getTranslations('home'),
   ]);
@@ -60,6 +71,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   if (!category) {
     notFound();
   }
+
+  const totalPages = Math.max(1, Math.ceil(category._count.topics / PAGE_SIZE));
 
   return (
     <div className="space-y-6">
@@ -102,7 +115,25 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         ))}
       </div>
 
-      {category.topics.length === 0 && (
+      {totalPages > 1 && (
+        <nav className="flex items-center justify-between font-mono text-sm">
+          {page > 1 ? (
+            <Link href={`/category/${slug}?page=${page - 1}`} className="text-[var(--cyber-cyan)] hover:underline">
+              ← {tCategory('previousPage')}
+            </Link>
+          ) : <span />}
+          <span className="text-muted-foreground">
+            {tCategory('pageOf', { page, total: totalPages })}
+          </span>
+          {page < totalPages ? (
+            <Link href={`/category/${slug}?page=${page + 1}`} className="text-[var(--cyber-cyan)] hover:underline">
+              {tCategory('nextPage')} →
+            </Link>
+          ) : <span />}
+        </nav>
+      )}
+
+      {category.topics.length === 0 && page === 1 && (
         <div className="card-cyber p-8 text-center">
           <p className="text-muted-foreground font-mono mb-4">
             {tCategory('noTopicsInCategory')}
